@@ -1,0 +1,711 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Líder - Gestão Industrial 4.0</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Bibliotecas UMD -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Recharts -->
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+
+    <!-- PDF & Data Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Firebase SDK (Compatibility Version 10.12.0) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .animate-fade { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .matrix-cell { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .matrix-cell:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+        .status-pill {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            padding: 4px 12px; border-radius: 9999px; letter-spacing: 0.025em;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        input, select, textarea {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .matrix-table th { border: 1px solid #e2e8f0; }
+        .matrix-table td { border: 1px solid #f1f5f9; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "recharts": "https://esm.sh/recharts@^3.6.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useMemo } = React;
+        const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = Recharts;
+
+        // --- CONFIGURAÇÃO FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8vZ1jZrE9wpo_YM3rk2BhMiRSfYsqss8",
+            authDomain: "projeto-sistema-lider.firebaseapp.com",
+            projectId: "projeto-sistema-lider",
+            storageBucket: "projeto-sistema-lider.firebasestorage.app",
+            messagingSenderId: "831955890134",
+            appId: "1:831955890134:web:b399188528357f7540be77",
+            measurementId: "G-0QEGX479FK"
+        };
+
+        // Inicialização do Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // --- DADOS INICIAIS ---
+        const TOPICS_LIST = ['SAP', 'EHS&S', 'PLANO DE PRODUÇÃO', 'QUALIDADE'];
+        const ROLE_OPTIONS = ['Operador III', 'Operador II', 'Operador I', 'Auxiliar de Produção'];
+
+        const PREREQUISITE_RULES = {
+            'Preenchimento de OP': { 'Operador III': 4, 'Operador II': 3, 'Operador I': 3, 'Auxiliar de Produção': 3 },
+            'Apontamento de OP': { 'Operador III': 4, 'Operador II': 3, 'Operador I': 3, 'Auxiliar de Produção': 1 },
+            'Encerramento de OP': { 'Operador III': 4, 'Operador II': 3, 'Operador I': 2, 'Auxiliar de Produção': 1 },
+            'Abertura de notas de manutenção': { 'Operador III': 4, 'Operador II': 3, 'Operador I': 3, 'Auxiliar de Produção': 1 },
+            'Planejar e realizar DDS': { 'Operador III': 3, 'Operador II': 3, 'Operador I': 3, 'Auxiliar de Produção': 2 },
+            'Comportamento seguro (SSMA)': { 'Operador III': 3, 'Operador II': 3, 'Operador I': 3, 'Auxiliar de Produção': 3 },
+            'Conhecer as FISPQS': { 'Operador III': 3, 'Operador II': 3, 'Operador I': 3, 'Auxiliar de Produção': 3 },
+            'Organização diária do time': { 'Operador III': 4, 'Operador II': 3, 'Operador I': 2, 'Auxiliar de Produção': 1 },
+            'Atualizar cronograma': { 'Operador III': 3, 'Operador II': 2, 'Operador I': 1, 'Auxiliar de Produção': 0 },
+            'Conhecimento no cronograma': { 'Operador III': 3, 'Operador II': 3, 'Operador I': 3, 'Auxiliar de Produção': 1 },
+            'Participação em Shop Floor': { 'Operador III': 3, 'Operador II': 3, 'Operador I': 3, 'Auxiliar de Produção': 1 }
+        };
+
+        // --- COMPONENTES ---
+
+        const Dashboard = ({ matrixData, pdis, meetings, skills }) => {
+            useEffect(() => { lucide.createIcons(); }, []);
+
+            const chartData = useMemo(() => {
+                const topics = [...new Set(skills.map(s => s.topic))];
+                return topics.map(topic => {
+                    const topicSkills = skills.filter(s => s.topic === topic);
+                    let sumScore = 0;
+                    let count = 0;
+                    matrixData.forEach(emp => {
+                        topicSkills.forEach(s => {
+                            sumScore += (emp.skills[s.name]?.r || 0);
+                            count++;
+                        });
+                    });
+                    const avg = count > 0 ? (sumScore / count) : 0;
+                    return { name: topic, score: Math.round((avg / 4) * 100) };
+                });
+            }, [matrixData, skills]);
+
+            const totalGaps = useMemo(() => {
+                let count = 0;
+                matrixData.forEach(emp => {
+                    Object.values(emp.skills).forEach(s => { if (s.r < s.p) count++; });
+                });
+                return count;
+            }, [matrixData]);
+
+            return (
+                <div className="animate-fade">
+                    <header className="mb-10">
+                        <h2 className="text-3xl font-black text-slate-800 tracking-tight">Status do Time</h2>
+                        <p className="text-slate-500 font-medium">Monitoramento de competências (Sincronizado via Firestore).</p>
+                    </header>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-8">Performance por Tópico (%)</h3>
+                            <div className="h-72">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={chartData}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 700}} />
+                                        <YAxis hide domain={[0, 100]} />
+                                        <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} />
+                                        <Bar dataKey="score" radius={[8, 8, 0, 0]} barSize={45}>
+                                            {chartData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.score > 70 ? '#2563eb' : '#f59e0b'} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-2xl">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">GAPs de Skill</p>
+                                <div className="flex items-end gap-3">
+                                    <p className="text-6xl font-black text-red-500 tracking-tighter">{totalGaps}</p>
+                                    <p className="text-sm font-bold text-slate-400 mb-2">Pendentes</p>
+                                </div>
+                            </div>
+                            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">PDIs em Curso</p>
+                                <p className="text-5xl font-black text-blue-600 tracking-tighter">{pdis.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const OperatorRegistrationView = ({ matrixData, skills }) => {
+            const [formData, setFormData] = useState({ name: '', role: ROLE_OPTIONS[1] });
+            
+            useEffect(() => { lucide.createIcons(); }, []);
+
+            const handleAddOperator = async (e) => {
+                e.preventDefault();
+                if (!formData.name.trim()) return;
+
+                const skillsMap = skills.reduce((acc, s) => {
+                    const skillRule = PREREQUISITE_RULES[s.name];
+                    const defaultP = skillRule ? (skillRule[formData.role] ?? 3) : 3;
+                    return { ...acc, [s.name]: { p: defaultP, r: 0 } };
+                }, {});
+
+                try {
+                    await db.collection('operators').add({
+                        name: formData.name,
+                        role: formData.role,
+                        skills: skillsMap,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    setFormData({ name: '', role: ROLE_OPTIONS[1] });
+                    alert('Colaborador registrado com sucesso no Firestore.');
+                } catch (error) {
+                    console.error("Erro ao adicionar operador:", error);
+                    alert("Falha ao salvar dados.");
+                }
+            };
+
+            const handleDeleteOperator = async (id, name) => {
+                if (window.confirm(`Remover ${name}? Esta ação é permanente no banco de dados.`)) {
+                    await db.collection('operators').doc(id).delete();
+                }
+            };
+
+            return (
+                <div className="animate-fade">
+                    <header className="mb-8">
+                        <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Cadastro de Novo Colaborador</h2>
+                        <p className="text-slate-500">Registre novos membros. Sincronização em tempo real ativada.</p>
+                    </header>
+
+                    <form onSubmit={handleAddOperator} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-xl mb-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label>
+                            <input required placeholder="Ex: João Silva" className="px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium" 
+                                value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cargo / Função</label>
+                            <select required className="px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium" 
+                                value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
+                                {ROLE_OPTIONS.map(role => (
+                                    <option key={role} value={role}>{role}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <button type="submit" className="md:col-span-2 py-4 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">
+                            Salvar no Firestore
+                        </button>
+                    </form>
+
+                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                        <table className="w-full">
+                            <thead className="bg-slate-900 text-white">
+                                <tr>
+                                    <th className="px-8 py-4 text-left text-[10px] uppercase font-black tracking-widest">Colaborador</th>
+                                    <th className="px-8 py-4 text-left text-[10px] uppercase font-black tracking-widest">Cargo</th>
+                                    <th className="px-8 py-4 text-right text-[10px] uppercase font-black tracking-widest">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {matrixData.map((op) => (
+                                    <tr key={op.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="px-8 py-4 font-bold text-slate-700">{op.name}</td>
+                                        <td className="px-8 py-4 text-slate-500 text-sm">{op.role}</td>
+                                        <td className="px-8 py-4 text-right">
+                                            <button onClick={() => handleDeleteOperator(op.id, op.name)} className="text-red-300 hover:text-red-500 transition-colors p-2">
+                                                <i data-lucide="trash-2" style={{width: 18}}></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+
+        const SkillMatrixView = ({ data, skills }) => {
+            const [editing, setEditing] = useState(null);
+            const [newSkillName, setNewSkillName] = useState('');
+            const [newSkillTopic, setNewSkillTopic] = useState('SAP');
+            const [newTopicInput, setNewTopicInput] = useState('');
+            const [showAddSkill, setShowAddSkill] = useState(false);
+            const [newSkillPRules, setNewSkillPRules] = useState({ 'Operador III': 4, 'Operador II': 3, 'Operador I': 2, 'Auxiliar de Produção': 1 });
+
+            useEffect(() => { lucide.createIcons(); }, [editing, data, skills, showAddSkill, newSkillTopic]);
+
+            const groupedSkills = useMemo(() => {
+                const groups = {};
+                skills.forEach(s => {
+                    if (!groups[s.topic]) groups[s.topic] = [];
+                    groups[s.topic].push(s);
+                });
+                return groups;
+            }, [skills]);
+
+            const uniqueTopics = useMemo(() => Object.keys(groupedSkills), [groupedSkills]);
+            const orderedSkills = useMemo(() => uniqueTopics.flatMap(topic => groupedSkills[topic]), [uniqueTopics, groupedSkills]);
+
+            const updateValue = async (opId, skillKey, type, val) => {
+                const numeric = Math.min(4, Math.max(0, parseInt(val) || 0));
+                const op = data.find(o => o.id === opId);
+                const updatedSkills = { ...op.skills };
+                if (!updatedSkills[skillKey]) updatedSkills[skillKey] = { p: 3, r: 0 };
+                updatedSkills[skillKey][type] = numeric;
+
+                await db.collection('operators').doc(opId).update({ skills: updatedSkills });
+                setEditing(null);
+            };
+
+            const handleAddSkill = async (e) => {
+                e.preventDefault();
+                if (!newSkillName.trim()) return;
+                let finalTopic = newSkillTopic === 'NEW' ? newTopicInput.trim() : newSkillTopic;
+                if (!finalTopic) return;
+
+                const newSkill = { name: newSkillName.trim(), topic: finalTopic };
+                await db.collection('skills_config').add(newSkill);
+
+                // Batch update para todos os colaboradores no banco (simulado via loops simples para o modo compat)
+                const snapshot = await db.collection('operators').get();
+                const batch = db.batch();
+                snapshot.forEach(doc => {
+                    const role = doc.data().role;
+                    const pValue = newSkillPRules[role] ?? 3;
+                    batch.update(doc.ref, {
+                        [`skills.${newSkill.name}`]: { p: pValue, r: 0 }
+                    });
+                });
+                await batch.commit();
+
+                setNewSkillName('');
+                setNewTopicInput('');
+                setShowAddSkill(false);
+            };
+
+            const getLevelColor = (val) => {
+                if (val >= 4) return 'bg-blue-600 text-white';
+                if (val >= 3) return 'bg-blue-400 text-white';
+                if (val >= 2) return 'bg-blue-200 text-blue-900';
+                if (val >= 1) return 'bg-orange-100 text-orange-800';
+                return 'bg-slate-100 text-slate-400';
+            };
+
+            return (
+                <div className="animate-fade">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+                        <div>
+                            <h2 className="text-2xl font-black text-slate-800">Matriz de Habilidades</h2>
+                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Armazenamento Firestore Cloud</p>
+                        </div>
+                        <button onClick={() => setShowAddSkill(!showAddSkill)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg hover:bg-blue-700 transition-all">
+                            <i data-lucide="plus-circle" style={{width: 16}}></i> Nova Habilidade
+                        </button>
+                    </div>
+
+                    {showAddSkill && (
+                        <div className="bg-white p-6 rounded-[2rem] border border-blue-100 shadow-xl mb-8">
+                            <form onSubmit={handleAddSkill} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input required placeholder="Nome da Habilidade" className="px-4 py-3 rounded-xl border bg-slate-50" value={newSkillName} onChange={e => setNewSkillName(e.target.value)} />
+                                    <select className="px-4 py-3 rounded-xl border bg-slate-50" value={newSkillTopic} onChange={e => setNewSkillTopic(e.target.value)}>
+                                        {TOPICS_LIST.map(t => <option key={t} value={t}>{t}</option>)}
+                                        <option value="NEW">+ Novo Tópico</option>
+                                    </select>
+                                </div>
+                                <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl font-black uppercase">Criar Habilidade Cloud</button>
+                            </form>
+                        </div>
+                    )}
+
+                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl overflow-hidden custom-scrollbar">
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse matrix-table">
+                                <thead>
+                                    <tr className="bg-slate-900 text-white">
+                                        <th rowSpan="2" className="px-8 py-4 text-left font-black text-xs uppercase bg-slate-900 sticky left-0 z-40">Colaborador</th>
+                                        {uniqueTopics.map(topic => (
+                                            <th key={topic} colSpan={groupedSkills[topic].length * 2} className="px-4 py-3 text-center text-[11px] font-black uppercase border-l-2 border-slate-700">{topic}</th>
+                                        ))}
+                                    </tr>
+                                    <tr className="bg-blue-50 text-slate-800">
+                                        {orderedSkills.map(skill => (
+                                            <th key={skill.name} colSpan="2" className="px-4 py-4 text-center text-[9px] font-bold border-l border-slate-200">{skill.name}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map((emp) => (
+                                        <tr key={emp.id} className="hover:bg-slate-50">
+                                            <td className="px-8 py-4 font-bold text-slate-700 sticky left-0 bg-white z-20 border-r-2 border-slate-100">{emp.name}</td>
+                                            {orderedSkills.map(skill => {
+                                                const p = emp.skills[skill.name]?.p || 0;
+                                                const r = emp.skills[skill.name]?.r || 0;
+                                                return (
+                                                    <React.Fragment key={`${skill.name}-${emp.id}`}>
+                                                        <td className="p-2 border-l border-slate-50">
+                                                            <div onClick={() => setEditing({opId: emp.id, s: skill.name, type:'p'})} className={`w-9 h-9 mx-auto rounded-lg flex items-center justify-center font-black text-[10px] matrix-cell ${getLevelColor(p)}`}>
+                                                                {editing?.opId === emp.id && editing?.s === skill.name && editing?.type === 'p' ? (
+                                                                    <input autoFocus className="w-full h-full bg-slate-100 text-center" onBlur={(e) => updateValue(emp.id, skill.name, 'p', e.target.value)} />
+                                                                ) : p}
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-2 relative">
+                                                            <div onClick={() => setEditing({opId: emp.id, s: skill.name, type:'r'})} className={`w-9 h-9 mx-auto rounded-lg flex items-center justify-center font-black text-[10px] matrix-cell ${getLevelColor(r)} ${r < p ? 'ring-2 ring-red-400' : ''}`}>
+                                                                {editing?.opId === emp.id && editing?.s === skill.name && editing?.type === 'r' ? (
+                                                                    <input autoFocus className="w-full h-full bg-slate-100 text-center" onBlur={(e) => updateValue(emp.id, skill.name, 'r', e.target.value)} />
+                                                                ) : r}
+                                                            </div>
+                                                            {r < p && <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></div>}
+                                                        </td>
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const TrainingMatrixView = ({ matrixData, procedures, trainingRecords }) => {
+            const [viewMode, setViewMode] = useState('roles');
+            const [showAddForm, setShowAddForm] = useState(false);
+            const [newPop, setNewPop] = useState({ code: '', title: '', date: '', validity: 12 });
+            const [editingPop, setEditingPop] = useState(null);
+
+            useEffect(() => { lucide.createIcons(); }, [viewMode, procedures, trainingRecords, showAddForm]);
+
+            const handleAddProcedure = async (e) => {
+                e.preventDefault();
+                await db.collection('procedures').add({
+                    code: newPop.code, title: newPop.title, homologationDate: newPop.date, validityMonths: newPop.validity, roles: []
+                });
+                setNewPop({ code: '', title: '', date: '', validity: 12 });
+                setShowAddForm(false);
+            };
+
+            const toggleRole = async (codeId, role) => {
+                const proc = procedures.find(p => p.id === codeId);
+                const newRoles = proc.roles.includes(role) ? proc.roles.filter(r => r !== role) : [...proc.roles, role];
+                await db.collection('procedures').doc(codeId).update({ roles: newRoles });
+            };
+
+            const updateStatus = async (empName, popCode, status) => {
+                const key = `${empName}-${popCode}`;
+                await db.collection('training_records').doc(key).set({
+                    status, empName, popCode, date: new Date().toISOString().split('T')[0]
+                });
+            };
+
+            return (
+                <div className="animate-fade">
+                    <header className="mb-8 flex justify-between items-center">
+                        <h2 className="text-2xl font-black text-slate-800">Matriz de Treinamento Cloud</h2>
+                        <div className="flex gap-2">
+                            <button onClick={() => setShowAddForm(!showAddForm)} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Novo Procedimento</button>
+                            <button onClick={() => setViewMode(viewMode === 'roles' ? 'employees' : 'roles')} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-xs font-bold">Alternar Visão</button>
+                        </div>
+                    </header>
+
+                    {showAddForm && (
+                        <form onSubmit={handleAddProcedure} className="bg-white p-6 rounded-3xl shadow-xl mb-8 grid grid-cols-2 gap-4">
+                            <input required placeholder="Código POP" className="p-3 border rounded-xl" value={newPop.code} onChange={e => setNewPop({...newPop, code: e.target.value})} />
+                            <input required placeholder="Título" className="p-3 border rounded-xl" value={newPop.title} onChange={e => setNewPop({...newPop, title: e.target.value})} />
+                            <input type="date" className="p-3 border rounded-xl" value={newPop.date} onChange={e => setNewPop({...newPop, date: e.target.value})} />
+                            <button className="bg-blue-600 text-white font-bold rounded-xl">Cadastrar Procedimento</button>
+                        </form>
+                    )}
+
+                    <div className="bg-white rounded-[2rem] border overflow-x-auto shadow-sm">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-900 text-white text-[10px] uppercase font-black">
+                                <tr>
+                                    <th className="p-4">{viewMode === 'roles' ? 'Procedimento' : 'Colaborador'}</th>
+                                    {viewMode === 'roles' ? ROLE_OPTIONS.map(r => <th key={r} className="p-4 text-center">{r}</th>) : procedures.map(p => <th key={p.code} className="p-4 text-center">{p.code}</th>)}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {viewMode === 'roles' ? (
+                                    procedures.map(p => (
+                                        <tr key={p.id} className="border-t">
+                                            <td className="p-4"><div className="font-bold">{p.code}</div><div className="text-[10px] text-slate-400">{p.title}</div></td>
+                                            {ROLE_OPTIONS.map(role => (
+                                                <td key={role} className="p-4 text-center">
+                                                    <button onClick={() => toggleRole(p.id, role)} className={`w-8 h-8 rounded-lg ${p.roles.includes(role) ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-300'}`}>
+                                                        {p.roles.includes(role) ? '✓' : '-'}
+                                                    </button>
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))
+                                ) : (
+                                    matrixData.map(emp => (
+                                        <tr key={emp.id} className="border-t">
+                                            <td className="p-4 font-bold">{emp.name}</td>
+                                            {procedures.map(p => {
+                                                const rec = trainingRecords[`${emp.name}-${p.code}`];
+                                                const isMandatory = p.roles.includes(emp.role);
+                                                return (
+                                                    <td key={p.code} className="p-4 text-center">
+                                                        {isMandatory ? (
+                                                            <select className="text-[10px] p-1 border rounded" value={rec?.status || 'Pendente'} onChange={(e) => updateStatus(emp.name, p.code, e.target.value)}>
+                                                                <option>Pendente</option><option>Em Dia</option><option>Vencido</option>
+                                                            </select>
+                                                        ) : '-'}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+
+        const PdiView = ({ pdis, employees }) => {
+            const [showForm, setShowForm] = useState(false);
+            const [editingId, setEditingId] = useState(null);
+            const [formData, setFormData] = useState({ employee: '', role: '', objective: '', commitments: [] });
+
+            useEffect(() => { lucide.createIcons(); }, [showForm, pdis, editingId]);
+
+            const handleSave = async (e) => {
+                e.preventDefault();
+                await db.collection('pdis').add({
+                    ...formData,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'Em Curso',
+                    commitments: [{ desc: 'Meta Inicial', status: 'Pendente', id: Date.now() }]
+                });
+                setShowForm(false);
+            };
+
+            const updatePdi = async (id, data) => await db.collection('pdis').doc(id).update(data);
+            const deletePdi = async (id) => { if(confirm('Excluir PDI?')) await db.collection('pdis').doc(id).delete(); };
+
+            return (
+                <div className="animate-fade">
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-2xl font-black text-slate-800">Planos PDI (Firebase)</h2>
+                        <button onClick={() => setShowForm(!showForm)} className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">Novo PDI</button>
+                    </div>
+
+                    {showForm && (
+                        <form onSubmit={handleSave} className="bg-white p-8 rounded-3xl shadow-xl mb-10 space-y-4">
+                            <select className="w-full p-3 border rounded-xl" onChange={e => setFormData({...formData, employee: e.target.value})}>
+                                <option value="">Selecione o Colaborador</option>
+                                {employees.map(e => <option key={e} value={e}>{e}</option>)}
+                            </select>
+                            <input placeholder="Objetivo" className="w-full p-3 border rounded-xl" onChange={e => setFormData({...formData, objective: e.target.value})} />
+                            <button className="w-full py-4 bg-slate-900 text-white rounded-xl font-black">Iniciar PDI Cloud</button>
+                        </form>
+                    )}
+
+                    <div className="space-y-4">
+                        {pdis.map(p => (
+                            <div key={p.id} className="bg-white p-6 rounded-[2rem] border shadow-sm flex justify-between items-center">
+                                <div>
+                                    <h4 className="font-black text-slate-800">{p.employee}</h4>
+                                    <p className="text-sm text-slate-500">{p.objective}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => deletePdi(p.id)} className="text-red-300 hover:text-red-600"><i data-lucide="trash-2" style={{width: 18}}></i></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const OneOnOneView = ({ meetings, employees }) => {
+            const [showForm, setShowForm] = useState(false);
+            const [formData, setFormData] = useState({ employee: '', date: '', summary: '' });
+
+            const save = async (e) => {
+                e.preventDefault();
+                await db.collection('meetings').add(formData);
+                setShowForm(false);
+            };
+
+            return (
+                <div className="animate-fade">
+                    <header className="flex justify-between mb-8">
+                        <h2 className="text-2xl font-black text-slate-800">Feedbacks 1:1 Cloud</h2>
+                        <button onClick={() => setShowForm(!showForm)} className="bg-blue-600 text-white px-4 py-2 rounded-xl">Nova Reunião</button>
+                    </header>
+                    {showForm && (
+                        <form onSubmit={save} className="bg-white p-6 rounded-3xl shadow-xl mb-8 space-y-4">
+                            <select className="w-full p-3 border rounded-xl" onChange={e => setFormData({...formData, employee: e.target.value})}>
+                                <option value="">Colaborador</option>
+                                {employees.map(e => <option key={e} value={e}>{e}</option>)}
+                            </select>
+                            <textarea className="w-full p-3 border rounded-xl" placeholder="Resumo..." onChange={e => setFormData({...formData, summary: e.target.value})}></textarea>
+                            <button className="bg-slate-900 text-white w-full py-3 rounded-xl">Salvar Feedback</button>
+                        </form>
+                    )}
+                    <div className="space-y-4">
+                        {meetings.map(m => (
+                            <div key={m.id} className="bg-white p-5 border rounded-3xl shadow-sm">
+                                <h4 className="font-bold">{m.employee}</h4>
+                                <p className="text-sm text-slate-600">{m.summary}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [matrixData, setMatrixData] = useState([]);
+            const [skills, setSkills] = useState([]);
+            const [pdis, setPdis] = useState([]);
+            const [meetings, setMeetings] = useState([]);
+            const [procedures, setProcedures] = useState([]);
+            const [trainingRecords, setTrainingRecords] = useState({});
+
+            // Efeitos de Sincronização Firestore (onSnapshot)
+            useEffect(() => {
+                const unsubs = [
+                    db.collection('operators').onSnapshot(s => setMatrixData(s.docs.map(d => ({...d.data(), id: d.id})))),
+                    db.collection('skills_config').onSnapshot(s => setSkills(s.docs.map(d => ({...d.data(), id: d.id})))),
+                    db.collection('pdis').onSnapshot(s => setPdis(s.docs.map(d => ({...d.data(), id: d.id})))),
+                    db.collection('meetings').onSnapshot(s => setMeetings(s.docs.map(d => ({...d.data(), id: d.id})))),
+                    db.collection('procedures').onSnapshot(s => setProcedures(s.docs.map(d => ({...d.data(), id: d.id})))),
+                    db.collection('training_records').onSnapshot(s => {
+                        const recs = {};
+                        s.docs.forEach(d => recs[d.id] = d.data());
+                        setTrainingRecords(recs);
+                    })
+                ];
+                return () => unsubs.forEach(u => u());
+            }, []);
+
+            const employeeNames = useMemo(() => matrixData.map(o => o.name).sort(), [matrixData]);
+
+            const menu = [
+                { id: 'dashboard', label: 'Home', icon: 'layout-dashboard' },
+                { id: 'operators', label: 'Colaboradores', icon: 'user-plus' },
+                { id: 'matrix', label: 'Habilidades', icon: 'grid' },
+                { id: 'training', label: 'Treinamento', icon: 'graduation-cap' },
+                { id: 'pdi', label: 'PDI', icon: 'target' },
+                { id: 'oneone', label: '1:1', icon: 'message-square' },
+            ];
+
+            return (
+                <div className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc]">
+                    <aside className="hidden md:flex w-72 bg-slate-900 flex-col sticky top-0 h-screen z-50">
+                        <div className="p-10">
+                            <div className="flex items-center gap-4 mb-16">
+                                <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center font-black text-white text-2xl shadow-xl">L</div>
+                                <h1 className="text-white text-xs font-black uppercase leading-none">Líder App<br/><span className="text-[8px] text-blue-500 opacity-60 italic">Cloud Firestore</span></h1>
+                            </div>
+                            <nav className="space-y-2">
+                                {menu.map(item => (
+                                    <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all text-left ${activeTab === item.id ? 'bg-blue-600 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-800'}`}>
+                                        <i data-lucide={item.icon} style={{width: '20px'}}></i>
+                                        <span className="text-[11px] font-black uppercase">{item.label}</span>
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    </aside>
+
+                    <main className="flex-1 overflow-y-auto">
+                        <header className="sticky top-0 z-40 px-10 py-6 bg-white/80 backdrop-blur-xl border-b flex justify-between items-center">
+                            <div className="flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase">
+                                <i data-lucide="cloud" style={{width: 14}} className="text-blue-500"></i> Cloud Real-Time Active
+                            </div>
+                        </header>
+                        <div className="p-6 md:p-12 max-w-7xl mx-auto pb-32">
+                            {activeTab === 'dashboard' && <Dashboard matrixData={matrixData} pdis={pdis} meetings={meetings} skills={skills} />}
+                            {activeTab === 'operators' && <OperatorRegistrationView matrixData={matrixData} skills={skills} />}
+                            {activeTab === 'matrix' && <SkillMatrixView data={matrixData} skills={skills} />}
+                            {activeTab === 'training' && <TrainingMatrixView matrixData={matrixData} procedures={procedures} trainingRecords={trainingRecords} />}
+                            {activeTab === 'pdi' && <PdiView pdis={pdis} employees={employeeNames} />}
+                            {activeTab === 'oneone' && <OneOnOneView meetings={meetings} employees={employeeNames} />}
+                        </div>
+                    </main>
+
+                    <nav className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 px-8 py-4 rounded-full shadow-2xl flex gap-8 z-50">
+                        {menu.map(item => (
+                            <button key={item.id} onClick={() => setActiveTab(item.id)} className={`p-1 ${activeTab === item.id ? 'text-blue-500 scale-125' : 'text-slate-500'}`}>
+                                <i data-lucide={item.icon} style={{width: '22px'}}></i>
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
