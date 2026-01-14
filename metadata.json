@@ -1,7 +1,0 @@
-{
-  "name": "Líder App - Gestão Industrial 4.0",
-  "description": "Uma plataforma SaaS completa para gestão de pessoas, competências, treinamentos e indicadores de produção (OEE) baseada no Método Sistema Líder.",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}
