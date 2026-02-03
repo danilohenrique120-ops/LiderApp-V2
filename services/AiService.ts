@@ -7,10 +7,17 @@ import { DdsResponse, RoleplayResponse, RoleplayReport } from '../types';
  */
 export class AiService {
   private static instance: AiService;
-  private ai: GoogleGenAI;
+  private ai: GoogleGenAI | null = null;
+  private isEnabled: boolean = false;
 
   private constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+    const apiKey = process.env.API_KEY;
+    if (apiKey) {
+      this.ai = new GoogleGenAI({ apiKey });
+      this.isEnabled = true;
+    } else {
+      console.warn("AiService: API Key is missing. AI features will be disabled.");
+    }
   }
 
   public static getInstance(): AiService {
@@ -25,6 +32,7 @@ export class AiService {
    * Realiza cruzamento de dados de toda a unidade para suporte à decisão.
    */
   public async queryStrategicConsultant(prompt: string, contextData: any): Promise<string> {
+    if (!this.isEnabled || !this.ai) return "IA não disponível (Chave de API não configurada).";
     try {
       const response = await this.ai.models.generateContent({
         model: 'gemini-3-pro-preview',
@@ -57,6 +65,7 @@ export class AiService {
    * IA DE AUDITORIA POR FOTO: COMPLIANCE
    */
   public async analyzeSafetyImage(base64Data: string, mimeType: string, text: string, context: string): Promise<string> {
+    if (!this.isEnabled || !this.ai) return "Análise de imagem indisponível (API Key missing).";
     try {
       const response = await this.ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -101,6 +110,7 @@ export class AiService {
    */
   public async analyzeProactiveRisks(risks: string[]): Promise<string> {
     if (risks.length === 0) return "Operação estável. Todos os indicadores dentro do padrão.";
+    if (!this.isEnabled || !this.ai) return "Análise de riscos indisponível (API Key missing).";
     
     try {
       const response = await this.ai.models.generateContent({
@@ -128,6 +138,7 @@ export class AiService {
    * DDS GENERATION
    */
   public async generateDds(prompt: string, config: { duration: number, tone: string }): Promise<DdsResponse> {
+    if (!this.isEnabled || !this.ai) throw new Error("Serviço de IA não configurado.");
     const model = 'gemini-3-flash-preview';
     try {
       const response = await this.ai.models.generateContent({
@@ -158,6 +169,7 @@ export class AiService {
   }
 
   public async refineOccurrence(description: string): Promise<string> {
+    if (!this.isEnabled || !this.ai) return description;
     try {
       const response = await this.ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -171,6 +183,7 @@ export class AiService {
   }
 
   public async validateConsistency(twttp: any, herca: any, twttpAdvanced?: any): Promise<string> {
+    if (!this.isEnabled || !this.ai) return "";
     try {
       const response = await this.ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -191,6 +204,7 @@ export class AiService {
   }
 
   public async suggestCountermeasures(hercaFactors: string[], rootCauses: string, twttpAdvanced?: any): Promise<string[]> {
+    if (!this.isEnabled || !this.ai) return [];
     const isKnowledgeGap = !hercaFactors || hercaFactors.length === 0;
     try {
       const response = await this.ai.models.generateContent({
@@ -210,6 +224,7 @@ export class AiService {
   }
 
   public async queryRoleplay(message: string, systemContext: string): Promise<RoleplayResponse> {
+    if (!this.isEnabled || !this.ai) throw new Error("Simulação indisponível.");
     try {
       const response = await this.ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -226,6 +241,7 @@ export class AiService {
   }
 
   public async generateRoleplayReport(history: string): Promise<RoleplayReport> {
+    if (!this.isEnabled || !this.ai) throw new Error("Relatório indisponível.");
     try {
       const response = await this.ai.models.generateContent({
         model: 'gemini-3-flash-preview',
