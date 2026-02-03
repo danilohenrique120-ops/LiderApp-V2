@@ -1,19 +1,20 @@
 
 import React from 'react';
-import { 
-  Home, 
-  CheckSquare, 
-  Sparkles, 
-  Shield, 
-  AlertTriangle, 
-  Search, 
-  Users, 
-  Grid, 
-  Target, 
-  MessageSquare, 
-  BookOpen, 
+import {
+  Home,
+  CheckSquare,
+  Sparkles,
+  Shield,
+  AlertTriangle,
+  Search,
+  Users,
+  Grid,
+  Target,
+  MessageSquare,
+  BookOpen,
   UserCheck,
-  LogOut
+  LogOut,
+  Layout
 } from 'lucide-react';
 import { LogoIcon } from '../constants';
 
@@ -30,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onNavigate, onLogout, isMo
       label: "Gestão Tática",
       items: [
         { id: 'dashboard', label: 'Visão Geral', icon: Home },
+        { id: 'projects', label: 'Projetos & Kanban', icon: Layout },
         { id: 'todo', label: 'Agenda Operacional', icon: CheckSquare },
         { id: 'dds', label: 'DDS Inteligente', icon: Sparkles },
       ]
@@ -91,11 +93,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onNavigate, onLogout, isMo
                   <button
                     key={item.id}
                     onClick={() => onNavigate(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all text-left group relative ${
-                      isActive 
-                        ? 'bg-blue-600/10 text-blue-400 border-l-4 border-blue-500 rounded-l-none' 
-                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all text-left group relative ${isActive
+                      ? 'bg-blue-600/10 text-blue-400 border-l-4 border-blue-500 rounded-l-none'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                      }`}
                   >
                     <item.icon size={18} className={isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'} />
                     <span className="text-sm font-medium tracking-tight">
@@ -114,8 +115,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onNavigate, onLogout, isMo
 
       {/* FOOTER ACTIONS */}
       <div className="mt-12 pt-6 border-t border-slate-800">
-        <button 
-          onClick={onLogout} 
+        <button
+          onClick={onLogout}
           className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold text-sm"
         >
           <LogOut size={18} />

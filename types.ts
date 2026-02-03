@@ -198,3 +198,16 @@ export interface CauseAnalysisReport {
   plano_acao_sugerido: string[];
   status_investigacao: "CONCLUIDA";
 }
+
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  status: 'todo' | 'in-progress' | 'done';
+  priority: 'low' | 'medium' | 'high';
+  dueDate: string; // ISO format
+  budget?: number;
+  createdAt: any; // Timestamp
+  userId?: string;
+  teamName?: string;
+}
