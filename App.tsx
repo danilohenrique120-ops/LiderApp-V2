@@ -42,7 +42,8 @@ import {
   TodoTask,
   TodoNote,
   AppSettings,
-  KnowledgeDoc
+  KnowledgeDoc,
+  User
 } from './types';
 
 // Firebase Config
@@ -50,6 +51,7 @@ import firebase, { auth, db } from './services/firebase';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<firebase.User | null>(null);
+  const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -85,6 +87,23 @@ const App: React.FC = () => {
     });
     return () => unsubscribeAuth();
   }, []);
+
+  // Fetch User Profile (Plan)
+  useEffect(() => {
+    if (!user) {
+      setUserData(null);
+      return;
+    }
+    const unsubscribeProfile = db.collection('users').doc(user.uid).onSnapshot(doc => {
+      if (doc.exists) {
+        setUserData(doc.data() as User);
+      } else {
+        // Fallback for existing users without profile doc
+        setUserData({ uid: user.uid, email: user.email || '', plan: 'free', createdAt: new Date() });
+      }
+    });
+    return () => unsubscribeProfile();
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -245,7 +264,7 @@ const App: React.FC = () => {
             />
           )}
           {activeTab === 'projects' && (
-            <ProjectsView />
+            <ProjectsView userPlan={userData?.plan} />
           )}
           {activeTab === 'compliance' && (
             <ComplianceView

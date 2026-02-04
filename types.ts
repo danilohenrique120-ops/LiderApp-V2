@@ -211,3 +211,10 @@ export interface Project {
   userId?: string;
   teamName?: string;
 }
+
+export interface User {
+  uid: string;
+  email: string;
+  plan: 'free' | 'start' | 'pro';
+  createdAt: any;
+}

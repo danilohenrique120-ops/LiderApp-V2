@@ -18,7 +18,11 @@ import { ProjectService } from '../services/ProjectService';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const ProjectsView: React.FC = () => {
+interface ProjectsViewProps {
+    userPlan?: string;
+}
+
+const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,6 +39,8 @@ const ProjectsView: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
+        if (userPlan !== 'pro') return; // Don't subscribe if not pro
+
         const unsubscribe = ProjectService.subscribeToProjects(
             (data) => {
                 setProjects(data);
@@ -47,7 +53,59 @@ const ProjectsView: React.FC = () => {
             }
         );
         return () => unsubscribe();
-    }, []);
+    }, [userPlan]);
+
+    if (userPlan !== 'pro') {
+        return (
+            <div className="h-[calc(100vh-100px)] flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+                <div className="bg-slate-900 border border-slate-700/50 p-10 rounded-[2.5rem] max-w-2xl shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-12 opacity-5">
+                        <DollarSign size={200} className="text-blue-500" />
+                    </div>
+
+                    <div className="w-20 h-20 bg-blue-600/20 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/10">
+                        <Layout size={40} />
+                    </div>
+
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tight mb-4">
+                        Funcionalidade Exclusiva <span className="text-blue-500">Líder Pro</span>
+                    </h2>
+
+                    <p className="text-slate-400 text-lg mb-8 font-medium leading-relaxed">
+                        A Gestão de Projetos Avançada com Kanban é uma ferramenta de alta performance para supervisores que precisam entregar resultados.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-left max-w-lg mx-auto">
+                        <div className="flex items-center gap-3 text-slate-300 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-blue-500" /> Gestão Visual Kanban
+                        </div>
+                        <div className="flex items-center gap-3 text-slate-300 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-blue-500" /> Prazos e Prioridades
+                        </div>
+                        <div className="flex items-center gap-3 text-slate-300 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-blue-500" /> Delegação de Times
+                        </div>
+                        <div className="flex items-center gap-3 text-slate-300 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-blue-500" /> Orçamento e Custos
+                        </div>
+                    </div>
+
+                    <a
+                        href="https://buy.stripe.com/test_bJe6oH9LNeCTaSt90mabK01"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-600/20 transition-all hover:scale-105"
+                    >
+                        Desbloquear Agora <DollarSign size={16} />
+                    </a>
+
+                    <p className="text-[10px] text-slate-500 font-bold mt-4 uppercase tracking-widest">
+                        Acesso imediato após confirmação
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();

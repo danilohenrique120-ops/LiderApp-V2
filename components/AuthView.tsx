@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { LogoIcon } from '../constants';
+import { db } from '../services/firebase';
 
 interface AuthViewProps {
     auth: any;
@@ -21,7 +22,15 @@ const AuthView: React.FC<AuthViewProps> = ({ auth, onBack }) => {
             if (isLogin) {
                 await auth.signInWithEmailAndPassword(email, password);
             } else {
-                await auth.createUserWithEmailAndPassword(email, password);
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                if (userCredential.user) {
+                    await db.collection('users').doc(userCredential.user.uid).set({
+                        uid: userCredential.user.uid,
+                        email: email,
+                        plan: 'free',
+                        createdAt: new Date()
+                    });
+                }
             }
         } catch (err: any) {
             setError(err.message);
@@ -35,7 +44,7 @@ const AuthView: React.FC<AuthViewProps> = ({ auth, onBack }) => {
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/5 blur-[120px] rounded-full"></div>
 
             <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden p-10 animate-fade relative z-10">
-                <button 
+                <button
                     onClick={onBack}
                     className="absolute top-8 left-8 p-2 text-slate-300 hover:text-slate-800 transition-colors flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
                 >
@@ -61,24 +70,24 @@ const AuthView: React.FC<AuthViewProps> = ({ auth, onBack }) => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-mail Corporativo</label>
-                        <input 
-                            type="email" 
-                            required 
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" 
-                            placeholder="exemplo@lider.com" 
-                            value={email} 
-                            onChange={e => setEmail(e.target.value)} 
+                        <input
+                            type="email"
+                            required
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                            placeholder="exemplo@lider.com"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
                         />
                     </div>
                     <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Senha</label>
-                        <input 
-                            type="password" 
-                            required 
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" 
-                            placeholder="••••••••" 
-                            value={password} 
-                            onChange={e => setPassword(e.target.value)} 
+                        <input
+                            type="password"
+                            required
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
                         />
                     </div>
                     <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all mt-4">

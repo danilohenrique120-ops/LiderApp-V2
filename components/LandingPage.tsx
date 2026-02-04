@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { 
-    ChevronRight, 
-    Zap, 
-    ShieldCheck, 
-    Target, 
-    Brain, 
-    Layout, 
+import {
+    ChevronRight,
+    Zap,
+    ShieldCheck,
+    Target,
+    Brain,
+    Layout,
     CheckCircle2,
     Users,
     Activity,
@@ -53,11 +53,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">CHÃO DE FÁBRICA</span>
                     </h1>
                     <p className="text-slate-400 text-lg md:text-xl max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
-                        A plataforma definitiva para supervisores industriais. Matriz de polivalência, 
+                        A plataforma definitiva para supervisores industriais. Matriz de polivalência,
                         DDS com IA e gestão de pessoas em um único cockpit operacional.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
-                        <button 
+                        <button
                             onClick={onEnter}
                             className="bg-blue-600 text-white px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-blue-900/40 hover:scale-105 transition-all flex items-center justify-center gap-3 group"
                         >
@@ -143,7 +143,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                     {/* Título Principal de Planos */}
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mb-6 leading-tight">
-                            O Próximo Nível da Sua <br className="hidden md:block"/>
+                            O Próximo Nível da Sua <br className="hidden md:block" />
                             <span className="text-blue-500">Liderança Começa Aqui</span>
                         </h2>
                         <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium">
@@ -179,22 +179,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                                     <p className="text-slate-400 text-xs font-bold">Para quem está assumindo o comando agora.</p>
                                 </div>
                             </div>
-                            
+
                             <p className="text-sm text-slate-300 mb-8 leading-relaxed font-medium">
                                 Ideal para líderes que querem testar o poder da IA e eliminar a burocracia básica do dia a dia.
                             </p>
 
                             <ul className="space-y-4 mb-10 flex-1">
                                 <li className="flex items-center gap-3 text-sm font-bold text-slate-200">
-                                    <CheckCircle2 size={18} className="text-emerald-500" /> 
+                                    <CheckCircle2 size={18} className="text-emerald-500" />
                                     <span><span className="text-white">Acesso Total:</span> Todas as IAs liberadas</span>
                                 </li>
                                 <li className="flex items-center gap-3 text-sm font-bold text-slate-200">
-                                    <Coins size={18} className="text-amber-500" /> 
+                                    <Coins size={18} className="text-amber-500" />
                                     <span><span className="text-white">50 Créditos:</span> Mensais para uso livre</span>
                                 </li>
                                 <li className="flex items-center gap-3 text-sm font-bold text-slate-200">
-                                    <History size={18} className="text-blue-500" /> 
+                                    <History size={18} className="text-blue-500" />
                                     <span><span className="text-white">30 Dias:</span> De histórico de registros</span>
                                 </li>
                             </ul>
@@ -205,15 +205,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                                 <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">Menos de R$ 1,00 por dia</p>
                             </div>
 
-                            <button onClick={onEnter} className="w-full py-5 rounded-2xl bg-white text-slate-900 font-black uppercase text-xs tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
+                            <a
+                                href="https://buy.stripe.com/test_3cI7sLaPRgL13q16SeabK00"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full py-5 rounded-2xl bg-white text-slate-900 font-black uppercase text-xs tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                            >
                                 Quero Começar Agora <ChevronRight size={18} />
-                            </button>
+                            </a>
                         </div>
 
                         {/* Opção 2: Líder Pro */}
                         <div className="p-10 rounded-[3rem] bg-blue-600 border border-blue-500 shadow-2xl shadow-blue-900/40 flex flex-col relative transform md:scale-105 z-10">
                             <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-blue-600 px-6 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">Best-Seller</div>
-                            
+
                             <div className="flex justify-between items-start mb-8">
                                 <div>
                                     <h4 className="text-[10px] font-black text-blue-100 uppercase tracking-[0.2em] mb-2">👑 Plano LÍDER PRO</h4>
@@ -228,19 +233,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 
                             <ul className="space-y-4 mb-10 flex-1">
                                 <li className="flex items-center gap-3 text-sm font-bold text-white">
-                                    <Zap size={18} className="text-amber-300" /> 
+                                    <Zap size={18} className="text-amber-300" />
                                     <span><span className="font-black">DDS ILIMITADO:</span> Roteiros sem custo de créditos</span>
                                 </li>
                                 <li className="flex items-center gap-3 text-sm font-bold text-white">
-                                    <Coins size={18} className="text-white" /> 
+                                    <Coins size={18} className="text-white" />
                                     <span><span className="font-black">200 Créditos:</span> 4x mais poder de IA</span>
                                 </li>
                                 <li className="flex items-center gap-3 text-sm font-bold text-white">
-                                    <History size={18} className="text-blue-200" /> 
+                                    <History size={18} className="text-blue-200" />
                                     <span><span className="font-black">Histórico Vitalício:</span> Registro para sempre</span>
                                 </li>
                                 <li className="flex items-center gap-3 text-sm font-bold text-white">
-                                    <CheckCircle2 size={18} className="text-white" /> 
+                                    <CheckCircle2 size={18} className="text-white" />
                                     <span><span className="font-black">Suporte VIP:</span> Atendimento prioritário</span>
                                 </li>
                             </ul>
@@ -251,9 +256,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                                 <p className="text-[10px] text-blue-200 font-bold mt-2 uppercase tracking-widest">4x mais recursos + DDS Livre</p>
                             </div>
 
-                            <button onClick={onEnter} className="w-full py-5 rounded-2xl bg-white text-blue-600 font-black uppercase text-xs tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 shadow-xl">
+                            <a
+                                href="https://buy.stripe.com/test_bJe6oH9LNeCTaSt90mabK01"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full py-5 rounded-2xl bg-white text-blue-600 font-black uppercase text-xs tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 shadow-xl"
+                            >
                                 Quero Ser Líder Pro <ChevronRight size={18} />
-                            </button>
+                            </a>
                         </div>
                     </div>
 
@@ -276,30 +286,30 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                                     </thead>
                                     <tbody className="divide-y divide-slate-700/50">
                                         {[
-                                            { 
-                                                name: "DDS Inteligente", 
-                                                cost: "1 Crédito", 
+                                            {
+                                                name: "DDS Inteligente",
+                                                cost: "1 Crédito",
                                                 desc: "Cria um roteiro engajador em segundos (Grátis no PRO).",
                                                 icon: Brain,
                                                 color: "text-amber-500"
                                             },
-                                            { 
-                                                name: "Análise de Causa (Ishikawa)", 
-                                                cost: "5 Créditos", 
+                                            {
+                                                name: "Análise de Causa (Ishikawa)",
+                                                cost: "5 Créditos",
                                                 desc: "Descobre a raiz do problema técnico ou comportamental.",
                                                 icon: Search,
                                                 color: "text-blue-500"
                                             },
-                                            { 
-                                                name: "Plano de PDI Completo", 
-                                                cost: "8 Créditos", 
+                                            {
+                                                name: "Plano de PDI Completo",
+                                                cost: "8 Créditos",
                                                 desc: "Monta o plano de evolução para o seu funcionário.",
                                                 icon: Target,
                                                 color: "text-indigo-500"
                                             },
-                                            { 
-                                                name: "Roleplay (Simulador 1:1)", 
-                                                cost: "10 Créditos", 
+                                            {
+                                                name: "Roleplay (Simulador 1:1)",
+                                                cost: "10 Créditos",
                                                 desc: "Treina você para conversas difíceis antes delas acontecerem.",
                                                 icon: MessageCircle,
                                                 color: "text-emerald-500"
@@ -328,7 +338,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                                 </table>
                             </div>
                         </div>
-                        
+
                         <div className="mt-8 flex items-center justify-center gap-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                             <ShieldCheck size={16} className="text-blue-500" />
                             Pagamento Seguro via Stripe • Cancelamento fácil a qualquer momento
