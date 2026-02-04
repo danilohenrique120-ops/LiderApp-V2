@@ -210,6 +210,8 @@ export interface Project {
   createdAt: any; // Timestamp
   userId?: string;
   teamName?: string;
+  progress?: number; // 0-100
+  members?: string[]; // Array of initials e.g. ["DS", "AN"]
 }
 
 export interface User {

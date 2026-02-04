@@ -11,7 +11,8 @@ import {
     CheckCircle2,
     Clock,
     DollarSign,
-    Layout
+    Layout,
+    Users
 } from 'lucide-react';
 import { Project } from '../types';
 import { ProjectService } from '../services/ProjectService';
@@ -34,8 +35,11 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
         priority: 'medium',
         dueDate: new Date().toISOString().split('T')[0],
         budget: 0,
-        teamName: ''
+        teamName: '',
+        progress: 0,
+        members: []
     });
+    const [membersInput, setMembersInput] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -126,6 +130,19 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
         }
     };
 
+    // Helper to generate avatars from input
+    const handleMembersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setMembersInput(e.target.value);
+        const initials = e.target.value.split(',').map(name => {
+            const trimmed = name.trim();
+            if (!trimmed) return '';
+            const parts = trimmed.split(' ');
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }).filter(Boolean);
+        setFormData(prev => ({ ...prev, members: initials }));
+    };
+
     const handleDelete = async (id: string) => {
         if (confirm('Tem certeza que deseja excluir este projeto?')) {
             try {
@@ -154,8 +171,11 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                 priority: project.priority,
                 dueDate: project.dueDate,
                 budget: project.budget || 0,
-                teamName: project.teamName || ''
+                teamName: project.teamName || '',
+                progress: project.progress || 0,
+                members: project.members || []
             });
+            setMembersInput(project.members ? project.members.join(', ') : '');
         } else {
             setEditingProject(null);
             setFormData({
@@ -165,8 +185,11 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                 priority: 'medium',
                 dueDate: new Date().toISOString().split('T')[0],
                 budget: 0,
-                teamName: ''
+                teamName: '',
+                progress: 0,
+                members: []
             });
+            setMembersInput('');
         }
         setIsModalOpen(true);
     };
@@ -209,43 +232,83 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                         columnProjects.map(project => (
                             <div key={project.id} className="bg-slate-800 p-4 rounded-xl border border-slate-700 hover:border-blue-500/50 hover:shadow-lg transition-all group animate-fade-in relative">
                                 <div className="flex justify-between items-start mb-3">
-                                    <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border ${getPriorityColor(project.priority)}`}>
-                                        {project.priority === 'high' ? 'Alta' : project.priority === 'medium' ? 'Média' : 'Baixa'}
-                                    </span>
+                                    <div className="flex flex-col gap-1">
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border w-fit ${getPriorityColor(project.priority)}`}>
+                                            {project.priority === 'high' ? 'Alta Prioridade' : project.priority === 'medium' ? 'Prioridade Média' : 'Prioridade Baixa'}
+                                        </span>
+                                        <h4 className="font-bold text-white leading-snug text-sm">{project.title}</h4>
+                                    </div>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => openModal(project)} className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-blue-400"><Edit2 size={14} /></button>
-                                        <button onClick={() => handleDelete(project.id)} className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-rose-400"><Trash2 size={14} /></button>
+                                        <button onClick={() => openModal(project)} className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-blue-400"><Edit2 size={12} /></button>
+                                        <button onClick={() => handleDelete(project.id)} className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-rose-400"><Trash2 size={12} /></button>
                                     </div>
                                 </div>
 
-                                <h4 className="font-bold text-white mb-2 leading-snug">{project.title}</h4>
-                                {project.description && <p className="text-slate-400 text-xs line-clamp-2 mb-3">{project.description}</p>}
+                                {/* Team & Members */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        {project.teamName && (
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-900/50 px-2 py-1 rounded">
+                                                {project.teamName}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex -space-x-1.5">
+                                        {project.members && project.members.map((m, i) => (
+                                            <div key={i} className="w-6 h-6 rounded-full bg-slate-700 border border-slate-800 flex items-center justify-center text-[8px] font-bold text-white shadow-sm ring-2 ring-slate-800" title={m}>
+                                                {m}
+                                            </div>
+                                        ))}
+                                        {(!project.members || project.members.length === 0) && (
+                                            <div className="w-6 h-6 rounded-full bg-slate-700/50 border border-slate-700 border-dashed flex items-center justify-center text-[8px] text-slate-500">
+                                                ?
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
 
-                                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-700/50">
-                                    <div className="flex items-center gap-1 text-slate-500">
-                                        <Calendar size={12} />
-                                        <span className="text-[10px] font-bold">
-                                            {project.dueDate ? format(parseISO(project.dueDate), 'dd/MM', { locale: ptBR }) : '-'}
-                                        </span>
+                                {/* Footer Info */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                        <span>Progresso</span>
+                                        <span>{project.progress || 0}%</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-500 ${(project.progress || 0) === 100 ? 'bg-emerald-500' :
+                                                    (project.progress || 0) > 50 ? 'bg-blue-500' : 'bg-amber-500'
+                                                }`}
+                                            style={{ width: `${project.progress || 0}%` }}
+                                        ></div>
                                     </div>
 
-                                    {/* Simplified Move Action */}
-                                    <div className="flex bg-slate-900 rounded-lg p-0.5">
-                                        {status !== 'todo' && (
-                                            <button onClick={() => handleStatusChange(project.id, 'todo')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-white" title="Mover para A Fazer">
-                                                <div className="w-2 h-2 rounded-full bg-slate-500"></div>
-                                            </button>
-                                        )}
-                                        {status !== 'in-progress' && (
-                                            <button onClick={() => handleStatusChange(project.id, 'in-progress')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-blue-400" title="Mover para Em Andamento">
-                                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                                            </button>
-                                        )}
-                                        {status !== 'done' && (
-                                            <button onClick={() => handleStatusChange(project.id, 'done')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-emerald-400" title="Mover para Concluído">
-                                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                            </button>
-                                        )}
+                                    <div className="flex items-center justify-between pt-3 border-t border-slate-700/50">
+                                        <div className={`flex items-center gap-1.5 text-[10px] font-bold ${new Date(project.dueDate) < new Date() && project.status !== 'done' ? 'text-rose-400' : 'text-slate-400'
+                                            }`}>
+                                            <Clock size={12} />
+                                            <span>
+                                                {project.dueDate ? format(parseISO(project.dueDate), "dd MMM", { locale: ptBR }).toUpperCase() : '-'}
+                                            </span>
+                                        </div>
+
+                                        {/* Move Actions */}
+                                        <div className="flex bg-slate-900 rounded-lg p-0.5">
+                                            {status !== 'todo' && (
+                                                <button onClick={() => handleStatusChange(project.id, 'todo')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-white" title="Mover para A Fazer">
+                                                    <div className="w-2 h-2 rounded-full bg-slate-500"></div>
+                                                </button>
+                                            )}
+                                            {status !== 'in-progress' && (
+                                                <button onClick={() => handleStatusChange(project.id, 'in-progress')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-blue-400" title="Mover para Em Andamento">
+                                                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                                </button>
+                                            )}
+                                            {status !== 'done' && (
+                                                <button onClick={() => handleStatusChange(project.id, 'done')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-emerald-400" title="Mover para Concluído">
+                                                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -320,6 +383,47 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                                     style={{ colorScheme: 'dark' }}
                                     placeholder="Ex: Manutenção Mecânica, Equipe Alpha..."
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Equipe envolvida (Separe por vírgula)</label>
+                                    <div className="relative">
+                                        <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                                        <input
+                                            type="text"
+                                            value={membersInput}
+                                            onChange={handleMembersChange}
+                                            className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg pl-10 pr-4 py-3 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold"
+                                            placeholder="Ex: Ana Silva, Carlos, DS"
+                                            style={{ colorScheme: 'dark' }}
+                                        />
+                                    </div>
+                                    {formData.members && formData.members.length > 0 && (
+                                        <div className="flex gap-1 mt-2 flex-wrap">
+                                            {formData.members.map((m, i) => (
+                                                <div key={i} className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[9px] font-bold text-white border border-slate-700">
+                                                    {m}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Progresso: {formData.progress}%</label>
+                                    <div className="flex items-center gap-3 h-[50px]">
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            step="5"
+                                            value={formData.progress || 0}
+                                            onChange={e => setFormData({ ...formData, progress: Number(e.target.value) })}
+                                            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                        />
+                                        <span className="text-sm font-bold text-white w-10">{formData.progress}%</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
