@@ -1,9 +1,9 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { 
-    Users, 
-    Zap, 
-    Download, 
+import {
+    Users,
+    Zap,
+    Download,
     ChevronRight,
     ShieldAlert,
     Bell,
@@ -15,21 +15,23 @@ import {
     Radar,
     Sparkles,
     Loader2,
-    AlertTriangle
+    AlertTriangle,
+    RefreshCw
 } from 'lucide-react';
-import { 
-    ResponsiveContainer, 
-    Tooltip, 
-    PieChart, 
+import {
+    ResponsiveContainer,
+    Tooltip,
+    PieChart,
     Pie,
     Cell,
     LineChart,
     Line
 } from 'recharts';
-import { Operator, PDI, Meeting, SkillConfig, Procedure, TrainingRecord, ProductionEntry, SkillValue, HumanErrorInvestigation } from '../types';
+import { Operator, PDI, Meeting, SkillConfig, Procedure, TrainingRecord, ProductionEntry, SkillValue, HumanErrorInvestigation, User } from '../types';
 import { AiService } from '../services/AiService';
+import { db } from '../services/firebase';
 import EmptyState from './EmptyState';
-import { addDays, isBefore, parseISO, startOfToday } from 'date-fns';
+import { addDays, isBefore, parseISO, startOfToday, format } from 'date-fns';
 
 interface DashboardProps {
     matrixData: Operator[];
@@ -41,18 +43,20 @@ interface DashboardProps {
     productionData: ProductionEntry[];
     investigations: HumanErrorInvestigation[];
     onNavigate?: (id: string) => void;
+    user?: User | null;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ 
-    matrixData, 
-    pdis, 
-    meetings, 
-    skills, 
-    procedures, 
-    trainingRecords, 
-    productionData, 
+const Dashboard: React.FC<DashboardProps> = ({
+    matrixData,
+    pdis,
+    meetings,
+    skills,
+    procedures,
+    trainingRecords,
+    productionData,
     investigations,
-    onNavigate 
+    onNavigate,
+    user
 }) => {
     const [radarMessage, setRadarMessage] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(false);
@@ -117,23 +121,82 @@ const Dashboard: React.FC<DashboardProps> = ({
         return risks;
     }, [matrixData, procedures, trainingRecords, investigations]);
 
-    // Chama a IA para sintetizar os riscos
+    // Chama a IA para sintetizar os riscos / Cache Diário
     useEffect(() => {
         const fetchRadar = async () => {
+            if (!user) return;
+
+            const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+            // CENÁRIO A: CACHE VÁLIDO (0 Créditos)
+            if (user.radarCache && user.radarCache.date === todayStr && user.radarCache.content) {
+                setRadarMessage(user.radarCache.content);
+                return;
+            }
+
+            // CENÁRIO B: NOVO DIA (1 Crédito)
+            // Só executa se houver riscos para analisar
             if (detectedRisks.length > 0) {
                 setIsScanning(true);
                 try {
                     const message = await aiService.analyzeProactiveRisks(detectedRisks);
                     setRadarMessage(message);
+
+                    // Atualizar Cache e Descontar Crédito
+                    await db.collection('users').doc(user.uid).update({
+                        radarCache: {
+                            date: todayStr,
+                            content: message
+                        },
+                        // credits: (user.credits || 0) - 1 // TODO: Uncomment when credits logic is fully live
+                    });
+
+                } catch (error) {
+                    console.error("Erro ao gerar Radar:", error);
+                    setRadarMessage("Não foi possível gerar a análise no momento.");
                 } finally {
                     setIsScanning(false);
                 }
             } else {
-                setRadarMessage("Operação em conformidade. Continue o bom trabalho!");
+                const stableMsg = "Operação em conformidade. Continue o bom trabalho!";
+                setRadarMessage(stableMsg);
+                // Salvar cache "Vazio" para não re-executar hoje
+                await db.collection('users').doc(user.uid).update({
+                    radarCache: {
+                        date: todayStr,
+                        content: stableMsg
+                    }
+                });
             }
         };
+
         fetchRadar();
-    }, [detectedRisks.length]); // Apenas re-executa se a quantidade de riscos mudar drasticamente
+    }, [user?.uid, user?.radarCache?.date, detectedRisks.length]); // Dependências ajustadas
+
+    const handleManualRefresh = async () => {
+        if (!user || detectedRisks.length === 0) return;
+
+        if (confirm('Gerar uma nova análise agora consumirá 1 crédito. Continuar?')) {
+            setIsScanning(true);
+            try {
+                const message = await aiService.analyzeProactiveRisks(detectedRisks);
+                setRadarMessage(message);
+
+                const todayStr = format(new Date(), 'yyyy-MM-dd');
+                await db.collection('users').doc(user.uid).update({
+                    radarCache: {
+                        date: todayStr,
+                        content: message
+                    },
+                    // credits: (user.credits || 0) - 1
+                });
+            } catch (error) {
+                alert("Erro ao atualizar Radar.");
+            } finally {
+                setIsScanning(false);
+            }
+        }
+    };
 
     const exportToPDF = (elementId: string, filename: string) => {
         const element = document.getElementById(elementId);
@@ -221,7 +284,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         return dist.filter(d => d.value > 0);
     }, [matrixData]);
 
-    const gapTrend = [ { v: 40 }, { v: 35 }, { v: 50 }, { v: 45 }, { v: 60 }, { v: 55 }, { v: totalGaps } ];
+    const gapTrend = [{ v: 40 }, { v: 35 }, { v: 50 }, { v: 45 }, { v: 60 }, { v: 55 }, { v: totalGaps }];
 
     return (
         <div id="print-dashboard" className="animate-fade bg-[#0F172A] min-h-screen p-0 selection:bg-blue-500/30">
@@ -233,8 +296,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                     <h2 className="text-4xl font-black text-white tracking-tighter uppercase leading-none">Minha Unidade</h2>
                 </div>
-                <button 
-                    onClick={() => exportToPDF('print-dashboard', 'Relatorio-Lider')} 
+                <button
+                    onClick={() => exportToPDF('print-dashboard', 'Relatorio-Lider')}
                     className="bg-[#1E293B] border border-slate-700 text-slate-300 hover:text-white px-6 py-3 rounded-xl flex items-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all shadow-md"
                 >
                     <Download size={16} /> Baixar Analítico
@@ -256,11 +319,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </div>
                             )}
                         </div>
-                        
+
                         <div className="flex-1 text-center md:text-left">
                             <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
                                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Radar Líder • Proatividade IA</h3>
                                 {isScanning && <Loader2 size={12} className="animate-spin text-blue-500" />}
+                                {!isScanning && (
+                                    <button
+                                        onClick={handleManualRefresh}
+                                        className="ml-auto md:ml-3 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-blue-500/30 transition-all flex items-center gap-2 group"
+                                        title="Gerar nova análise (Custo: 1 Crédito)"
+                                    >
+                                        <RefreshCw size={12} className="group-hover:rotate-180 transition-transform duration-500" />
+                                        <span>Atualizar Análise</span>
+                                    </button>
+                                )}
                             </div>
                             {isScanning ? (
                                 <p className="text-slate-400 font-medium italic animate-pulse">Escaneando vulnerabilidades e priorizando ações...</p>
@@ -282,7 +355,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                 </div>
             </div>
-            
+
             {/* BENTO GRID PRINCIPAL */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {/* CARD CRÍTICO: GAPS DE SKILL */}
@@ -321,7 +394,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
 
                         <div className="mt-auto flex items-center justify-between">
-                            <button 
+                            <button
                                 onClick={() => onNavigate?.('matrix')}
                                 className="bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-[0.2em] py-4 px-8 rounded-xl shadow-lg transition-all flex items-center gap-2"
                             >
@@ -346,14 +419,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <p className="text-6xl font-black text-white tracking-tighter">{trainingCompliance}%</p>
                         </div>
                         <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden mb-6">
-                            <div 
-                                className={`h-full transition-all duration-1000 ${trainingCompliance < 50 ? 'bg-rose-500' : 'bg-blue-500'}`} 
+                            <div
+                                className={`h-full transition-all duration-1000 ${trainingCompliance < 50 ? 'bg-rose-500' : 'bg-blue-500'}`}
                                 style={{ width: `${trainingCompliance}%` }}
                             ></div>
                         </div>
                         <p className="text-xs text-slate-400 font-medium leading-relaxed">Aderência aos procedimentos homologados.</p>
                     </div>
-                    <button 
+                    <button
                         onClick={() => onNavigate?.('training')}
                         className="w-full mt-6 py-3 border border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2"
                     >
@@ -372,7 +445,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <p className="text-6xl font-black text-white tracking-tighter mb-2">{matrixData.length}</p>
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Colaboradores no Turno</p>
                     </div>
-                    <button 
+                    <button
                         onClick={() => onNavigate?.('operators')}
                         className="w-full mt-6 py-3 border border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2"
                     >
@@ -398,7 +471,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             {meetings.length === 0 && <p className="text-[10px] text-slate-600 italic">Sem 1:1 agendados.</p>}
                         </div>
                     </div>
-                    <button 
+                    <button
                         onClick={() => onNavigate?.('oneone')}
                         className="w-full mt-6 py-3 border border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2"
                     >
@@ -417,7 +490,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <p className="text-6xl font-black text-white tracking-tighter mb-2">{errorAdherence}%</p>
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Eficiência em Planos</p>
                     </div>
-                    <button 
+                    <button
                         onClick={() => onNavigate?.('human-error')}
                         className="w-full mt-6 py-3 border border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2"
                     >
@@ -436,7 +509,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                         <Bell size={24} className="text-blue-500" />
                     </div>
-                    
+
                     <div className="flex-1 space-y-4">
                         {priorityAlerts.length > 0 ? (
                             priorityAlerts.map((alert, idx) => (
@@ -453,7 +526,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             </div>
                                         </div>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={alert.action}
                                         className="p-3 text-slate-500 hover:text-white transition-colors"
                                     >
@@ -462,8 +535,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </div>
                             ))
                         ) : (
-                            <EmptyState 
-                                title="Operação Estável" 
+                            <EmptyState
+                                title="Operação Estável"
                                 description="Nenhum desvio crítico registrado no período."
                                 primaryActionLabel="Ver Equipe"
                                 onPrimaryAction={() => onNavigate?.('operators')}

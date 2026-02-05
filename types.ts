@@ -219,4 +219,9 @@ export interface User {
   email: string;
   plan: 'free' | 'start' | 'pro';
   createdAt: any;
+  credits?: number;
+  radarCache?: {
+    date: string; // YYYY-MM-DD
+    content: string;
+  };
 }

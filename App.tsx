@@ -261,6 +261,7 @@ const App: React.FC = () => {
               productionData={productionData}
               investigations={humanErrorInvestigations}
               onNavigate={handleTabClick}
+              user={userData}
             />
           )}
           {activeTab === 'projects' && (
