@@ -37,9 +37,11 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
         budget: 0,
         teamName: '',
         progress: 0,
-        members: []
+        members: [],
+        actions: []
     });
     const [membersInput, setMembersInput] = useState('');
+    const [newActionInput, setNewActionInput] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -173,7 +175,8 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                 budget: project.budget || 0,
                 teamName: project.teamName || '',
                 progress: project.progress || 0,
-                members: project.members || []
+                members: project.members || [],
+                actions: project.actions || []
             });
             setMembersInput(project.members ? project.members.join(', ') : '');
         } else {
@@ -190,8 +193,69 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                 members: []
             });
             setMembersInput('');
+            setNewActionInput('');
         }
         setIsModalOpen(true);
+    };
+
+    const handleAddAction = () => {
+        if (!newActionInput.trim()) return;
+
+        const newAction = {
+            id: crypto.randomUUID(),
+            title: newActionInput.trim(),
+            completed: false
+        };
+
+        const updatedActions = [...(formData.actions || []), newAction];
+
+        // Auto-calc progress
+        const completed = updatedActions.filter(a => a.completed).length;
+        const progress = Math.round((completed / updatedActions.length) * 100);
+
+        setFormData(prev => ({
+            ...prev,
+            actions: updatedActions,
+            progress
+        }));
+        setNewActionInput('');
+    };
+
+    const handleToggleAction = (actionId: string) => {
+        const updatedActions = (formData.actions || []).map(a =>
+            a.id === actionId ? { ...a, completed: !a.completed } : a
+        );
+
+        // Auto-calc progress
+        const completed = updatedActions.filter(a => a.completed).length;
+        const progress = Math.round((completed / updatedActions.length) * 100);
+
+        setFormData(prev => ({
+            ...prev,
+            actions: updatedActions,
+            progress
+        }));
+    };
+
+    const handleUpdateAction = (actionId: string, field: 'title' | 'deadline', value: string) => {
+        const updatedActions = (formData.actions || []).map(a =>
+            a.id === actionId ? { ...a, [field]: value } : a
+        );
+        setFormData(prev => ({ ...prev, actions: updatedActions }));
+    };
+
+    const handleDeleteAction = (actionId: string) => {
+        const updatedActions = (formData.actions || []).filter(a => a.id !== actionId);
+
+        // Auto-calc progress
+        const completed = updatedActions.filter(a => a.completed).length;
+        const progress = updatedActions.length > 0 ? Math.round((completed / updatedActions.length) * 100) : 0;
+
+        setFormData(prev => ({
+            ...prev,
+            actions: updatedActions,
+            progress
+        }));
     };
 
     const closeModal = () => {
@@ -276,7 +340,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                                     <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
                                         <div
                                             className={`h-full rounded-full transition-all duration-500 ${(project.progress || 0) === 100 ? 'bg-emerald-500' :
-                                                    (project.progress || 0) > 50 ? 'bg-blue-500' : 'bg-amber-500'
+                                                (project.progress || 0) > 50 ? 'bg-blue-500' : 'bg-amber-500'
                                                 }`}
                                             style={{ width: `${project.progress || 0}%` }}
                                         ></div>
@@ -352,170 +416,272 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
 
             {/* Modal de Criação/Edição */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
-                            <h3 className="text-white font-black uppercase tracking-wider">{editingProject ? 'Editar Projeto' : 'Novo Projeto'}</h3>
-                            <button onClick={closeModal} className="text-slate-400 hover:text-white"><X size={20} /></button>
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-slate-900 border border-slate-700 w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+                            <div>
+                                <h3 className="text-white text-xl font-black uppercase tracking-wider">{editingProject ? 'Editar Projeto' : 'Novo Projeto'}</h3>
+                                <p className="text-slate-400 text-xs font-medium mt-1">Central de Comando do Projeto</p>
+                            </div>
+                            <button onClick={closeModal} className="text-slate-400 hover:text-white p-2 hover:bg-slate-800 rounded-full transition-all"><X size={24} /></button>
                         </div>
-                        <form onSubmit={handleSave} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Título</label>
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    value={formData.title}
-                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                    className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold"
-                                    style={{ colorScheme: 'dark' }}
-                                    placeholder="Ex: Instalação de Sensores Linha 2"
-                                    required
-                                />
-                            </div>
 
-                            <div>
-                                <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Nome do Time / Responsável</label>
-                                <input
-                                    type="text"
-                                    value={formData.teamName || ''}
-                                    onChange={e => setFormData({ ...formData, teamName: e.target.value })}
-                                    className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold"
-                                    style={{ colorScheme: 'dark' }}
-                                    placeholder="Ex: Manutenção Mecânica, Equipe Alpha..."
-                                />
-                            </div>
+                        {/* Body - Scrollable */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            <form id="project-form" onSubmit={handleSave} className="p-8 grid grid-cols-12 gap-8">
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Equipe envolvida (Separe por vírgula)</label>
-                                    <div className="relative">
-                                        <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                                {/* COLUNA ESQUERDA - METADADOS (35%) */}
+                                <div className="col-span-12 md:col-span-4 space-y-6 border-r border-slate-800 pr-8">
+                                    <h4 className="text-blue-500 font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+                                        <Layout size={14} /> Dados do Projeto
+                                    </h4>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Título do Projeto</label>
                                         <input
+                                            autoFocus
                                             type="text"
-                                            value={membersInput}
-                                            onChange={handleMembersChange}
-                                            className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg pl-10 pr-4 py-3 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold"
-                                            placeholder="Ex: Ana Silva, Carlos, DS"
+                                            value={formData.title}
+                                            onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                            className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 !placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold text-sm"
+                                            style={{ colorScheme: 'dark' }}
+                                            placeholder="Ex: Instalação Sensores"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Status</label>
+                                            <div className="relative">
+                                                <select
+                                                    value={formData.status}
+                                                    onChange={e => setFormData({ ...formData, status: e.target.value as any })}
+                                                    className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-3 py-2.5 appearance-none focus:border-blue-500 outline-none transition-all font-bold text-xs"
+                                                >
+                                                    <option value="todo">A Fazer</option>
+                                                    <option value="in-progress">Em Execução</option>
+                                                    <option value="done">Concluído</option>
+                                                </select>
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Prioridade</label>
+                                            <div className="relative">
+                                                <select
+                                                    value={formData.priority}
+                                                    onChange={e => setFormData({ ...formData, priority: e.target.value as any })}
+                                                    className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-3 py-2.5 appearance-none focus:border-blue-500 outline-none transition-all font-bold text-xs"
+                                                >
+                                                    <option value="low">Baixa</option>
+                                                    <option value="medium">Média</option>
+                                                    <option value="high">Alta</option>
+                                                </select>
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Data de Entrega</label>
+                                        <input
+                                            type="date"
+                                            value={formData.dueDate}
+                                            onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
+                                            className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold text-sm"
                                             style={{ colorScheme: 'dark' }}
                                         />
                                     </div>
-                                    {formData.members && formData.members.length > 0 && (
-                                        <div className="flex gap-1 mt-2 flex-wrap">
-                                            {formData.members.map((m, i) => (
-                                                <div key={i} className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[9px] font-bold text-white border border-slate-700">
-                                                    {m}
+
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Orçamento (R$)</label>
+                                        <div className="relative">
+                                            <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                                            <input
+                                                type="number"
+                                                value={formData.budget}
+                                                onChange={e => setFormData({ ...formData, budget: Number(e.target.value) })}
+                                                className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg pl-9 pr-4 py-3 !placeholder-slate-400 focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                                                placeholder="0.00"
+                                                style={{ colorScheme: 'dark' }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Responsável / Time</label>
+                                        <input
+                                            type="text"
+                                            value={formData.teamName || ''}
+                                            onChange={e => setFormData({ ...formData, teamName: e.target.value })}
+                                            className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 !placeholder-slate-400 focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                                            placeholder="Ex: Manutenção"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Membros (Iniciais)</label>
+                                        <div className="relative">
+                                            <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                                            <input
+                                                type="text"
+                                                value={membersInput}
+                                                onChange={handleMembersChange}
+                                                className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg pl-9 pr-4 py-3 !placeholder-slate-400 focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                                                placeholder="Separe por vírgula..."
+                                            />
+                                        </div>
+                                        {formData.members && formData.members.length > 0 && (
+                                            <div className="flex gap-1 mt-2 flex-wrap">
+                                                {formData.members.map((m, i) => (
+                                                    <div key={i} className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-black text-white border-2 border-slate-800 shadow-sm">
+                                                        {m}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* COLUNA DIREITA - EXECUÇÃO (65%) */}
+                                <div className="col-span-12 md:col-span-8 space-y-6 pl-2">
+                                    <h4 className="text-emerald-500 font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+                                        <CheckCircle2 size={14} /> Plano de Execução
+                                    </h4>
+
+                                    {/* Description */}
+                                    <div className="relative">
+                                        <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Descrição Detalhada</label>
+                                        <textarea
+                                            rows={3}
+                                            value={formData.description}
+                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                            className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-xl px-4 py-3 !placeholder-slate-400 focus:border-blue-500 outline-none resize-none transition-all font-medium text-sm leading-relaxed"
+                                            placeholder="Descreva o escopo e objetivos do projeto..."
+                                            style={{ colorScheme: 'dark' }}
+                                        />
+                                    </div>
+
+                                    {/* Checklist Pro */}
+                                    <div className="bg-slate-950/50 rounded-2xl border border-slate-800 overflow-hidden flex flex-col h-[400px]">
+                                        <div className="p-4 border-b border-slate-800/50 bg-slate-900/50 flex justify-between items-center">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                                                Checklist de Ações
+                                            </label>
+                                            <span className={`text-xs font-bold px-2 py-1 rounded-md ${formData.progress === 100 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                                                {formData.progress}% Concluído
+                                            </span>
+                                        </div>
+
+                                        {/* Actions List */}
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                            {(!formData.actions || formData.actions.length === 0) && (
+                                                <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-3 opacity-60">
+                                                    <div className="p-4 bg-slate-800/50 rounded-full">
+                                                        <CheckCircle2 size={32} />
+                                                    </div>
+                                                    <p className="text-sm font-medium">Nenhuma ação planejada</p>
+                                                    <p className="text-xs">Use o campo abaixo para adicionar etapas.</p>
+                                                </div>
+                                            )}
+
+                                            {formData.actions?.map(action => (
+                                                <div key={action.id} className="flex items-center gap-3 bg-slate-800 p-2 rounded-lg border border-slate-700/50 group hover:border-slate-600 transition-all">
+
+                                                    {/* Checkbox */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleToggleAction(action.id)}
+                                                        className={`w-5 h-5 flex-shrink-0 rounded-[4px] border-2 flex items-center justify-center transition-all ${action.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-500 hover:border-blue-500 bg-slate-900'
+                                                            }`}
+                                                    >
+                                                        {action.completed && <CheckCircle2 size={12} strokeWidth={3} />}
+                                                    </button>
+
+                                                    {/* Editable Name */}
+                                                    <input
+                                                        type="text"
+                                                        value={action.title}
+                                                        onChange={(e) => handleUpdateAction(action.id, 'title', e.target.value)}
+                                                        className={`flex-1 bg-transparent border-none outline-none text-sm font-medium transition-colors ${action.completed ? '!text-white line-through opacity-70' : '!text-white'}`}
+                                                    />
+
+                                                    {/* Deadline Input */}
+                                                    <div className="flex items-center gap-1 bg-slate-900 rounded px-2 py-1 border border-slate-700">
+                                                        <Calendar size={10} className="text-slate-500" />
+                                                        <input
+                                                            type="date"
+                                                            value={action.deadline || ''}
+                                                            onChange={(e) => handleUpdateAction(action.id, 'deadline', e.target.value)}
+                                                            className="bg-transparent border-none outline-none text-[10px] !text-white font-bold w-[70px] cursor-pointer"
+                                                            style={{ colorScheme: 'dark' }}
+                                                        />
+                                                    </div>
+
+                                                    {/* Delete */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteAction(action.id)}
+                                                        className="text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 p-1.5 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                                        title="Remover ação"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Progresso: {formData.progress}%</label>
-                                    <div className="flex items-center gap-3 h-[50px]">
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            step="5"
-                                            value={formData.progress || 0}
-                                            onChange={e => setFormData({ ...formData, progress: Number(e.target.value) })}
-                                            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                                        />
-                                        <span className="text-sm font-bold text-white w-10">{formData.progress}%</span>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Status</label>
-                                    <div className="relative">
-                                        <select
-                                            value={formData.status}
-                                            onChange={e => setFormData({ ...formData, status: e.target.value as any })}
-                                            className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 appearance-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold"
-                                        >
-                                            <option value="todo">A Fazer</option>
-                                            <option value="in-progress">Em Execução</option>
-                                            <option value="done">Concluído</option>
-                                        </select>
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        {/* Add Action Bar */}
+                                        <div className="p-3 bg-slate-900 border-t border-slate-800 flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newActionInput}
+                                                onChange={e => setNewActionInput(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleAddAction();
+                                                    }
+                                                }}
+                                                className="flex-1 !bg-slate-800 !text-white border-2 border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:border-blue-500 outline-none transition-all font-medium !placeholder-slate-400"
+                                                placeholder="Adicionar nova etapa (Enter)..."
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleAddAction}
+                                                className="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-lg transition-colors font-bold shadow-lg shadow-blue-500/20"
+                                            >
+                                                <Plus size={20} />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Prioridade</label>
-                                    <div className="relative">
-                                        <select
-                                            value={formData.priority}
-                                            onChange={e => setFormData({ ...formData, priority: e.target.value as any })}
-                                            className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 appearance-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold"
-                                        >
-                                            <option value="low">Baixa</option>
-                                            <option value="medium">Média</option>
-                                            <option value="high">Alta</option>
-                                        </select>
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            </form>
+                        </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Data de Entrega</label>
-                                    <input
-                                        type="date"
-                                        value={formData.dueDate}
-                                        onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                                        className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold"
-                                        style={{ colorScheme: 'dark' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Budget (R$)</label>
-                                    <input
-                                        type="number"
-                                        value={formData.budget}
-                                        onChange={e => setFormData({ ...formData, budget: Number(e.target.value) })}
-                                        className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold"
-                                        placeholder="0.00"
-                                        style={{ colorScheme: 'dark' }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Descrição</label>
-                                <textarea
-                                    rows={3}
-                                    value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-4 py-3 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none transition-all font-bold"
-                                    placeholder="Detalhes do projeto..."
-                                    style={{ colorScheme: 'dark' }}
-                                />
-                            </div>
-
-                            <div className="pt-2 flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSaving}
-                                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 flex justify-center items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : 'Salvar'}
-                                </button>
-                            </div>
-                        </form>
+                        {/* Sticky Footer */}
+                        <div className="p-6 border-t border-slate-800 bg-slate-950 flex justify-end gap-3 z-20">
+                            <button
+                                type="button"
+                                onClick={closeModal}
+                                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSave} // Trigger form submit via function
+                                disabled={isSaving}
+                                className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSaving ? <Loader2 size={16} className="animate-spin" /> : 'Salvar Projeto'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

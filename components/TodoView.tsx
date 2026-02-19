@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { 
-    FolderPlus, Plus, Search, Grid, 
+import {
+    FolderPlus, Plus, Search, Grid,
     X, MousePointer2, CheckCircle2, Calendar, UserPlus, Trash2,
     Save, Tag, AlertTriangle, Loader2, Pencil, Filter,
     Clock, ListFilter, ChevronDown
@@ -20,9 +20,9 @@ interface TodoViewProps {
 }
 
 const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) => {
-    const { 
-        selectedIds, isSelectionMode, toggleMode, toggleSelection, 
-        clearSelection, hasSelection, count 
+    const {
+        selectedIds, isSelectionMode, toggleMode, toggleSelection,
+        clearSelection, hasSelection, count
     } = useTaskSelection();
 
     const [activeFolderId, setActiveFolderId] = useState<string>('all');
@@ -55,15 +55,23 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
             const matchesSearch = t.text.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesFolder = activeFolderId === 'all' ? true : t.folderId === activeFolderId;
             const matchesPriority = priorityFilter === 'all' ? true : t.priority === priorityFilter;
-            
+
             let matchesStatus = true;
-            if (statusFilter === 'pending') matchesStatus = !t.completed;
-            else if (statusFilter === 'completed') matchesStatus = t.completed;
-            else if (statusFilter === 'delayed') matchesStatus = !t.completed && isBefore(parseISO(t.deadline), today);
+            const taskStatus = t.status || (t.completed ? 'done' : 'pending');
+
+            if (statusFilter === 'pending') matchesStatus = taskStatus === 'pending';
+            else if (statusFilter === 'completed') matchesStatus = taskStatus === 'done';
+            else if (statusFilter === 'delayed') matchesStatus = taskStatus !== 'done' && isBefore(parseISO(t.deadline), today);
 
             return matchesSearch && matchesFolder && matchesStatus && matchesPriority;
         }).sort((a, b) => {
-            if (a.completed !== b.completed) return Number(a.completed) - Number(b.completed);
+        }).sort((a, b) => {
+            const statusA = a.status || (a.completed ? 'done' : 'pending');
+            const statusB = b.status || (b.completed ? 'done' : 'pending');
+
+            if (statusA === 'done' && statusB !== 'done') return 1;
+            if (statusA !== 'done' && statusB === 'done') return -1;
+
             const priorityWeight = { 'Crítica': 4, 'Alta': 3, 'Média': 2, 'Baixa': 1 };
             return priorityWeight[a.priority] - priorityWeight[b.priority];
         });
@@ -71,10 +79,10 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
 
     const handleOpenCreateTask = () => {
         setEditingTask(null);
-        setTaskForm({ 
-            text: '', 
-            deadline: format(new Date(), 'yyyy-MM-dd'), 
-            priority: 'Média', 
+        setTaskForm({
+            text: '',
+            deadline: format(new Date(), 'yyyy-MM-dd'),
+            priority: 'Média',
             folderId: activeFolderId === 'all' ? 'all' : activeFolderId,
             comments: ''
         });
@@ -106,7 +114,9 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
             } else {
                 await db.collection('todo_tasks').add({
                     ...taskForm,
-                    completed: false,
+                    ...taskForm,
+                    status: 'pending',
+                    completed: false, // Legacy compatibility
                     uid: user.uid,
                     createdAt: new Date()
                 });
@@ -142,7 +152,7 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
     const handleBulkComplete = async () => {
         const batch = db.batch();
         selectedIds.forEach(id => {
-            batch.update(db.collection('todo_tasks').doc(id), { completed: true });
+            batch.update(db.collection('todo_tasks').doc(id), { status: 'done', completed: true });
         });
         await batch.commit();
         clearSelection();
@@ -182,7 +192,7 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
 
     return (
         <div className="flex flex-col lg:flex-row gap-8 animate-fade min-h-[calc(100vh-200px)] relative">
-            
+
             {/* BULK ACTION BAR */}
             {hasSelection && (
                 <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-fade">
@@ -240,11 +250,11 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                                     </label>
                                     <div className="relative">
                                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                                        <input 
-                                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium transition-all" 
-                                            placeholder="Descreva o que procura..." 
-                                            value={searchQuery} 
-                                            onChange={e => setSearchQuery(e.target.value)} 
+                                        <input
+                                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium transition-all"
+                                            placeholder="Descreva o que procura..."
+                                            value={searchQuery}
+                                            onChange={e => setSearchQuery(e.target.value)}
                                         />
                                     </div>
                                 </div>
@@ -255,12 +265,11 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                                         <ListFilter size={12} /> Status
                                     </label>
                                     <div className="relative">
-                                        <select 
+                                        <select
                                             value={statusFilter}
                                             onChange={(e) => setStatusFilter(e.target.value as any)}
-                                            className={`w-full appearance-none pl-4 pr-10 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border outline-none bg-white cursor-pointer ${
-                                                statusFilter !== 'all' ? 'border-slate-900 text-slate-900 bg-slate-50' : 'border-slate-100 text-slate-500 hover:border-slate-300'
-                                            }`}
+                                            className={`w-full appearance-none pl-4 pr-10 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border outline-none bg-white cursor-pointer ${statusFilter !== 'all' ? 'border-slate-900 text-slate-900 bg-slate-50' : 'border-slate-100 text-slate-500 hover:border-slate-300'
+                                                }`}
                                         >
                                             <option value="all">Todos Status</option>
                                             <option value="pending">Pendentes</option>
@@ -277,12 +286,11 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                                         <Tag size={12} /> Prioridade
                                     </label>
                                     <div className="relative">
-                                        <select 
+                                        <select
                                             value={priorityFilter}
                                             onChange={(e) => setPriorityFilter(e.target.value as any)}
-                                            className={`w-full appearance-none pl-6 pr-10 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border outline-none bg-white cursor-pointer ${
-                                                priorityFilter !== 'all' ? 'border-slate-900 text-slate-900 bg-slate-50' : 'border-slate-100 text-slate-500 hover:border-slate-300'
-                                            }`}
+                                            className={`w-full appearance-none pl-6 pr-10 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border outline-none bg-white cursor-pointer ${priorityFilter !== 'all' ? 'border-slate-900 text-slate-900 bg-slate-50' : 'border-slate-100 text-slate-500 hover:border-slate-300'
+                                                }`}
                                         >
                                             <option value="all">Prioridade: Todas</option>
                                             <option value="Crítica">Crítica</option>
@@ -291,13 +299,12 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                                             <option value="Baixa">Baixa</option>
                                         </select>
                                         <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                        
+
                                         {priorityFilter !== 'all' && (
-                                            <div className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-full ${
-                                                priorityFilter === 'Crítica' ? 'bg-red-500' :
+                                            <div className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-full ${priorityFilter === 'Crítica' ? 'bg-red-500' :
                                                 priorityFilter === 'Alta' ? 'bg-orange-500' :
-                                                priorityFilter === 'Média' ? 'bg-blue-500' : 'bg-slate-400'
-                                            }`} />
+                                                    priorityFilter === 'Média' ? 'bg-blue-500' : 'bg-slate-400'
+                                                }`} />
                                         )}
                                     </div>
                                 </div>
@@ -317,7 +324,7 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                         {/* Indicador de Filtros Ativos (Limpar) */}
                         {(statusFilter !== 'all' || priorityFilter !== 'all' || searchQuery !== '') && (
                             <div className="flex justify-end mb-4 px-1">
-                                <button 
+                                <button
                                     onClick={() => { setStatusFilter('all'); setPriorityFilter('all'); setSearchQuery(''); }}
                                     className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-black text-rose-500 uppercase tracking-[0.15em] hover:bg-rose-50 rounded-lg transition-all border border-rose-100"
                                 >
@@ -330,14 +337,20 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                     <div className="border-t border-slate-50">
                         {filteredTasks.length > 0 ? (
                             filteredTasks.map(task => (
-                                <TaskItem 
+                                <TaskItem
                                     key={task.id}
                                     task={task}
                                     isSelectionMode={isSelectionMode}
                                     isSelected={selectedIds.includes(task.id)}
-                                    onToggle={() => db.collection('todo_tasks').doc(task.id).update({ completed: !task.completed })}
+                                    // onToggle={() => db.collection('todo_tasks').doc(task.id).update({ completed: !task.completed })}
+                                    onStatusChange={(newStatus) => {
+                                        db.collection('todo_tasks').doc(task.id).update({
+                                            status: newStatus,
+                                            completed: newStatus === 'done'
+                                        });
+                                    }}
                                     onToggleSelection={() => toggleSelection(task.id)}
-                                    onDelete={() => { if(confirm('Excluir?')) db.collection('todo_tasks').doc(task.id).delete(); }}
+                                    onDelete={() => { if (confirm('Excluir?')) db.collection('todo_tasks').doc(task.id).delete(); }}
                                     onEdit={handleOpenEditTask}
                                 />
                             ))
@@ -345,7 +358,7 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                             <div className="p-20 text-center opacity-30 flex flex-col items-center gap-3">
                                 <AlertTriangle size={32} />
                                 <p className="text-sm font-black uppercase tracking-widest text-slate-400">Nenhuma tarefa corresponde aos filtros</p>
-                                <button 
+                                <button
                                     onClick={() => { setStatusFilter('all'); setPriorityFilter('all'); setSearchQuery(''); }}
                                     className="text-[10px] font-black text-blue-600 uppercase underline"
                                 >
@@ -375,42 +388,42 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                         <form onSubmit={handleCreateOrUpdateTask} className="p-8 space-y-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Descrição do Item</label>
-                                <input 
+                                <input
                                     autoFocus
                                     required
-                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" 
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                                     placeholder="O que precisa ser feito?"
                                     value={taskForm.text}
-                                    onChange={e => setTaskForm({...taskForm, text: e.target.value})}
+                                    onChange={e => setTaskForm({ ...taskForm, text: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Comentários / Sub-texto</label>
-                                <textarea 
+                                <textarea
                                     rows={2}
-                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm" 
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm"
                                     placeholder="Detalhes adicionais ou contexto..."
                                     value={taskForm.comments}
-                                    onChange={e => setTaskForm({...taskForm, comments: e.target.value})}
+                                    onChange={e => setTaskForm({ ...taskForm, comments: e.target.value })}
                                 />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Prazo</label>
-                                    <input 
+                                    <input
                                         type="date"
                                         required
                                         className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold"
                                         value={taskForm.deadline}
-                                        onChange={e => setTaskForm({...taskForm, deadline: e.target.value})}
+                                        onChange={e => setTaskForm({ ...taskForm, deadline: e.target.value })}
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Prioridade</label>
-                                    <select 
+                                    <select
                                         className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold"
                                         value={taskForm.priority}
-                                        onChange={e => setTaskForm({...taskForm, priority: e.target.value as any})}
+                                        onChange={e => setTaskForm({ ...taskForm, priority: e.target.value as any })}
                                     >
                                         <option>Baixa</option>
                                         <option>Média</option>
@@ -421,10 +434,10 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pasta</label>
-                                <select 
+                                <select
                                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold"
                                     value={taskForm.folderId}
-                                    onChange={e => setTaskForm({...taskForm, folderId: e.target.value})}
+                                    onChange={e => setTaskForm({ ...taskForm, folderId: e.target.value })}
                                 >
                                     <option value="all">Geral / Nenhuma</option>
                                     {folders.map(f => (
@@ -432,8 +445,8 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                                     ))}
                                 </select>
                             </div>
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 disabled={isSaving}
                                 className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-blue-700 transition-all disabled:opacity-50"
                             >
@@ -461,31 +474,31 @@ const TodoView: React.FC<TodoViewProps> = ({ folders, tasks, notes, user, db }) 
                         <form onSubmit={handleCreateFolder} className="p-8 space-y-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome da Pasta</label>
-                                <input 
+                                <input
                                     autoFocus
                                     required
-                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" 
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                                     placeholder="Ex: Projetos, Manutenção..."
                                     value={folderForm.name}
-                                    onChange={e => setFolderForm({...folderForm, name: e.target.value})}
+                                    onChange={e => setFolderForm({ ...folderForm, name: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-3">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cor de Identificação</label>
                                 <div className="flex flex-wrap gap-3">
                                     {folderColors.map(c => (
-                                        <button 
+                                        <button
                                             key={c}
                                             type="button"
-                                            onClick={() => setFolderForm({...folderForm, color: c})}
+                                            onClick={() => setFolderForm({ ...folderForm, color: c })}
                                             className={`w-10 h-10 rounded-xl transition-all ${folderForm.color === c ? 'ring-4 ring-blue-500/20 scale-110 border-2 border-white' : 'opacity-60 hover:opacity-100'}`}
                                             style={{ backgroundColor: c }}
                                         />
                                     ))}
                                 </div>
                             </div>
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 disabled={isSaving}
                                 className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all disabled:opacity-50"
                             >

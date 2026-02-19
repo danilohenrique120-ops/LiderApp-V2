@@ -170,21 +170,64 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                     </div>
 
                     {/* Plan Cards Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-24">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto mb-24 items-start">
+
+                        {/* Opção 0: Plano Visitante (Gratuito) */}
+                        <div className="p-8 rounded-[2.5rem] border border-slate-800 bg-transparent flex flex-col hover:border-slate-700 transition-all opacity-80 hover:opacity-100">
+                            <div className="flex justify-between items-start mb-6">
+                                <div>
+                                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Plano VISITANTE</h4>
+                                    <p className="text-slate-500 text-xs font-bold">Para conhecer o poder da IA.</p>
+                                </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <div className="text-3xl font-black text-slate-400">R$ 0,00<span className="text-xs font-medium text-slate-600">/mês</span></div>
+                            </div>
+
+                            <ul className="space-y-4 mb-8 flex-1">
+                                <li className="flex items-center gap-3 text-sm font-bold text-slate-400">
+                                    <Coins size={16} className="text-slate-600" />
+                                    <span>10 Créditos de IA (Degustação)</span>
+                                </li>
+                                <li className="flex items-center gap-3 text-sm font-bold text-slate-400">
+                                    <Activity size={16} className="text-slate-600" />
+                                    <span>Acesso Básico ao Radar Líder</span>
+                                </li>
+                                <li className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <History size={16} className="text-slate-700" />
+                                    <span>Histórico de 24h</span>
+                                </li>
+                                <li className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <Target size={16} className="text-slate-700" />
+                                    <span>Sem Gestão de Projetos</span>
+                                </li>
+                            </ul>
+
+                            <button
+                                onClick={onEnter}
+                                className="w-full py-4 rounded-xl border border-slate-600 text-slate-300 font-black uppercase text-[10px] tracking-widest hover:bg-slate-800 hover:text-white transition-all flex items-center justify-center gap-2"
+                            >
+                                Criar Conta Grátis
+                            </button>
+                        </div>
+
                         {/* Opção 1: Líder Start */}
-                        <div className="p-10 rounded-[3rem] bg-[#1E293B] border border-slate-700 flex flex-col hover:border-slate-500 transition-all">
-                            <div className="flex justify-between items-start mb-8">
+                        <div className="p-8 rounded-[2.5rem] bg-[#1E293B] border border-slate-700 flex flex-col hover:border-blue-500/50 transition-all relative z-10">
+                            <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-2">🚀 Plano LÍDER START</h4>
                                     <p className="text-slate-400 text-xs font-bold">Para quem está assumindo o comando agora.</p>
                                 </div>
                             </div>
 
-                            <p className="text-sm text-slate-300 mb-8 leading-relaxed font-medium">
-                                Ideal para líderes que querem testar o poder da IA e eliminar a burocracia básica do dia a dia.
-                            </p>
+                            <div className="mb-6">
+                                <div className="text-slate-500 text-xs line-through font-black mb-1">R$ 49,90</div>
+                                <div className="text-3xl font-black text-white">R$ 29,90<span className="text-xs font-medium text-slate-500">/mês</span></div>
+                                <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">Menos de R$ 1,00 por dia</p>
+                            </div>
 
-                            <ul className="space-y-4 mb-10 flex-1">
+                            <ul className="space-y-4 mb-8 flex-1">
                                 <li className="flex items-center gap-3 text-sm font-bold text-slate-200">
                                     <CheckCircle2 size={18} className="text-emerald-500" />
                                     <span><span className="text-white">Acesso Total:</span> Todas as IAs liberadas</span>
@@ -199,39 +242,35 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                                 </li>
                             </ul>
 
-                            <div className="mb-8 pt-6 border-t border-slate-700/50">
-                                <div className="text-slate-500 text-xs line-through font-black mb-1">R$ 49,90</div>
-                                <div className="text-4xl font-black text-white">R$ 29,90<span className="text-sm font-medium text-slate-500">/mês</span></div>
-                                <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">Menos de R$ 1,00 por dia</p>
-                            </div>
-
                             <a
                                 href="https://buy.stripe.com/test_3cI7sLaPRgL13q16SeabK00"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-full py-5 rounded-2xl bg-white text-slate-900 font-black uppercase text-xs tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-4 rounded-xl bg-slate-700 text-white font-black uppercase text-[10px] tracking-widest hover:bg-slate-600 transition-all flex items-center justify-center gap-2"
                             >
-                                Quero Começar Agora <ChevronRight size={18} />
+                                Quero Começar Agora <ChevronRight size={16} />
                             </a>
                         </div>
 
                         {/* Opção 2: Líder Pro */}
-                        <div className="p-10 rounded-[3rem] bg-blue-600 border border-blue-500 shadow-2xl shadow-blue-900/40 flex flex-col relative transform md:scale-105 z-10">
-                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-blue-600 px-6 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">Best-Seller</div>
+                        <div className="p-8 rounded-[2.5rem] bg-blue-600 border border-blue-500 shadow-2xl shadow-blue-900/40 flex flex-col relative transform md:scale-105 z-20">
+                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-blue-600 px-6 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl whitespace-nowrap">Best-Seller</div>
 
-                            <div className="flex justify-between items-start mb-8">
+                            <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <h4 className="text-[10px] font-black text-blue-100 uppercase tracking-[0.2em] mb-2">👑 Plano LÍDER PRO</h4>
                                     <p className="text-blue-100 text-xs font-bold">Supervisores e Coordenadores de Elite.</p>
                                 </div>
-                                <Crown size={32} className="text-white opacity-40" />
+                                <Crown size={24} className="text-white opacity-40" />
                             </div>
 
-                            <p className="text-sm text-blue-50 mb-8 leading-relaxed font-medium">
-                                A escolha certa para quem lidera times grandes, precisa de agilidade diária e quer acelerar a promoção.
-                            </p>
+                            <div className="mb-6">
+                                <div className="text-blue-200 text-xs font-black mb-1 uppercase tracking-widest">Investimento</div>
+                                <div className="text-4xl font-black text-white">R$ 59,90<span className="text-xs font-medium text-blue-200">/mês</span></div>
+                                <p className="text-[10px] text-blue-200 font-bold mt-2 uppercase tracking-widest">4x mais recursos + DDS Livre</p>
+                            </div>
 
-                            <ul className="space-y-4 mb-10 flex-1">
+                            <ul className="space-y-4 mb-8 flex-1">
                                 <li className="flex items-center gap-3 text-sm font-bold text-white">
                                     <Zap size={18} className="text-amber-300" />
                                     <span><span className="font-black">DDS ILIMITADO:</span> Roteiros sem custo de créditos</span>
@@ -250,17 +289,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                                 </li>
                             </ul>
 
-                            <div className="mb-8 pt-6 border-t border-blue-500/50">
-                                <div className="text-blue-200 text-xs font-black mb-1 uppercase tracking-widest">Investimento</div>
-                                <div className="text-4xl font-black text-white">R$ 59,90<span className="text-sm font-medium text-blue-200">/mês</span></div>
-                                <p className="text-[10px] text-blue-200 font-bold mt-2 uppercase tracking-widest">4x mais recursos + DDS Livre</p>
-                            </div>
-
                             <a
                                 href="https://buy.stripe.com/test_bJe6oH9LNeCTaSt90mabK01"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-full py-5 rounded-2xl bg-white text-blue-600 font-black uppercase text-xs tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 shadow-xl"
+                                className="w-full py-5 rounded-xl bg-white text-blue-600 font-black uppercase text-xs tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 shadow-xl"
                             >
                                 Quero Ser Líder Pro <ChevronRight size={18} />
                             </a>

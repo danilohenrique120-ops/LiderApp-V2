@@ -148,6 +148,7 @@ export interface TodoTask {
   deadline: string;
   priority: 'Baixa' | 'Média' | 'Alta' | 'Crítica';
   completed: boolean;
+  status?: 'pending' | 'in_progress' | 'done';
   comments?: string;
   uid: string;
   createdAt: any;
@@ -212,6 +213,7 @@ export interface Project {
   teamName?: string;
   progress?: number; // 0-100
   members?: string[]; // Array of initials e.g. ["DS", "AN"]
+  actions?: { id: string; title: string; completed: boolean; deadline?: string }[];
 }
 
 export interface User {
