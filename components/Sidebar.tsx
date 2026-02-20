@@ -14,7 +14,8 @@ import {
   BookOpen,
   UserCheck,
   LogOut,
-  Layout
+  Layout,
+  HelpCircle
 } from 'lucide-react';
 import { LogoIcon } from '../constants';
 
@@ -22,10 +23,11 @@ interface SidebarProps {
   activeTab: string;
   onNavigate: (id: string) => void;
   onLogout: () => void;
+  onStartTour?: () => void;
   isMobile?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, onNavigate, onLogout, isMobile }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, onNavigate, onLogout, onStartTour, isMobile }) => {
   const menuSections = [
     {
       label: "Gestão Tática",
@@ -114,7 +116,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onNavigate, onLogout, isMo
       </nav>
 
       {/* FOOTER ACTIONS */}
-      <div className="mt-12 pt-6 border-t border-slate-800">
+      <div className="mt-12 pt-6 border-t border-slate-800 space-y-2">
+        {onStartTour && (
+          <button
+            onClick={onStartTour}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-blue-400 hover:bg-blue-500/10 transition-all font-bold text-sm"
+          >
+            <HelpCircle size={18} />
+            Refazer Tutorial
+          </button>
+        )}
         <button
           onClick={onLogout}
           className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold text-sm"

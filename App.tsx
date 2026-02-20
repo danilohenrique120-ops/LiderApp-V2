@@ -80,6 +80,10 @@ const App: React.FC = () => {
   const [passwordError, setPasswordError] = useState(false);
   const [isProcessingPassword, setIsProcessingPassword] = useState(false);
 
+  // Tour State
+  const [runTour, setRunTour] = useState(false);
+  const [tourReady, setTourReady] = useState(false);
+
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(usr => {
       setUser(usr);
@@ -107,6 +111,17 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!user) return;
+
+    // Check Tour Status on Auth
+    const hasSeenTour = localStorage.getItem(`hasSeenTour_${user.uid}`);
+    if (!hasSeenTour) {
+      setTimeout(() => {
+        setTourReady(true);
+        setRunTour(true);
+      }, 1000); // Wait 1s for DOM to paint completely
+    } else {
+      setTourReady(true);
+    }
 
     const filter: [string, firebase.firestore.WhereFilterOp, string] = ['uid', '==', user.uid];
     const unsubs = [
@@ -158,6 +173,18 @@ const App: React.FC = () => {
   const handleTabClick = (itemOrId: string | any) => {
     const id = typeof itemOrId === 'string' ? itemOrId : itemOrId.id;
     setActiveTab(id);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleFinishTour = () => {
+    setRunTour(false);
+    if (user) {
+      localStorage.setItem(`hasSeenTour_${user.uid}`, 'true');
+    }
+  };
+
+  const handleStartTour = () => {
+    setRunTour(true);
     setIsMobileMenuOpen(false);
   };
 
@@ -227,10 +254,12 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#0F172A]">
       {/* Native Onboarding Tour (Pure React) */}
-      <NativeTour
-        devMode={true}
-        onFinish={(tab) => setActiveTab(tab)}
-      />
+      {tourReady && (
+        <NativeTour
+          run={runTour}
+          onFinish={handleFinishTour}
+        />
+      )}
 
       {/* Sidebar Desktop */}
       <aside className="hidden md:block w-80 sticky top-0 h-screen z-50">
@@ -238,6 +267,7 @@ const App: React.FC = () => {
           activeTab={activeTab}
           onNavigate={handleTabClick}
           onLogout={() => auth.signOut()}
+          onStartTour={handleStartTour}
         />
       </aside>
 
@@ -432,6 +462,7 @@ const App: React.FC = () => {
               activeTab={activeTab}
               onNavigate={handleTabClick}
               onLogout={() => auth.signOut()}
+              onStartTour={handleStartTour}
               isMobile={true}
             />
           </aside>

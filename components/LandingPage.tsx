@@ -15,7 +15,11 @@ import {
     Crown,
     MessageCircle,
     Search,
-    Clock
+    Clock,
+    Radar,
+    Kanban,
+    Calendar,
+    Bot
 } from 'lucide-react';
 import { LogoIcon } from '../constants';
 
@@ -70,6 +74,68 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                 {/* Decorative Blobs */}
                 <div className="absolute top-1/4 left-0 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full"></div>
                 <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 blur-[150px] rounded-full"></div>
+            </section>
+            {/* COCKPIT DE LIDERANÇA SECTION */}
+            <section className="py-24 px-6 relative z-10 w-full">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-4">
+                            O seu <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Cockpit de Liderança</span>
+                        </h2>
+                        <p className="text-slate-400 font-medium md:text-xl max-w-2xl mx-auto">
+                            Tudo o que você precisa para dominar a operação.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {[
+                            {
+                                title: "Radar Líder (IA Proativa)",
+                                desc: "Uma IA que analisa seu dia e te entrega um diagnóstico pronto toda manhã.",
+                                icon: Radar,
+                                color: "text-blue-400",
+                                bg: "bg-blue-500/10",
+                                border: "group-hover:border-blue-500/50"
+                            },
+                            {
+                                title: "Projetos e Planos de Ação",
+                                desc: "Kanban inteligente com checklists, prazos e cálculo automático de progresso.",
+                                icon: Kanban,
+                                color: "text-indigo-400",
+                                bg: "bg-indigo-500/10",
+                                border: "group-hover:border-indigo-500/50"
+                            },
+                            {
+                                title: "Agenda Dinâmica",
+                                desc: "Controle de rotina com status em tempo real (Pendente, Em Andamento, Concluído).",
+                                icon: Calendar,
+                                color: "text-emerald-400",
+                                bg: "bg-emerald-500/10",
+                                border: "group-hover:border-emerald-500/50"
+                            },
+                            {
+                                title: "Assistentes Especializados",
+                                desc: "Gere roteiros de segurança (DDS) e relatórios em segundos, sem esforço.",
+                                icon: Bot,
+                                color: "text-amber-400",
+                                bg: "bg-amber-500/10",
+                                border: "group-hover:border-amber-500/50"
+                            }
+                        ].map((item, i) => (
+                            <div key={i} className={`p-8 rounded-[2.5rem] bg-[#1E293B]/80 backdrop-blur-sm border border-slate-700/50 transition-all group ${item.border} hover:bg-[#1E293B]`}>
+                                <div className="flex flex-col sm:flex-row items-start gap-6">
+                                    <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${item.bg} ${item.color}`}>
+                                        <item.icon size={28} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase tracking-tight mb-2 text-slate-100">{item.title}</h3>
+                                        <p className="text-slate-400 text-sm leading-relaxed font-medium">{item.desc}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </section>
 
             {/* FEATURES GRID */}
