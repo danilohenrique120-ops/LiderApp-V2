@@ -29,6 +29,7 @@ import Sidebar from './components/Sidebar';
 import NativeTour from './components/NativeTour';
 import StrategicConsultant from './components/StrategicConsultant';
 import ProjectsView from './components/ProjectsView';
+import FollowUpView from './components/FollowUpView';
 import {
   Operator,
   SkillConfig,
@@ -41,6 +42,7 @@ import {
   TodoFolder,
   TodoTask,
   TodoNote,
+  FollowUpItem,
   AppSettings,
   KnowledgeDoc,
   User
@@ -68,6 +70,7 @@ const App: React.FC = () => {
   const [todoFolders, setTodoFolders] = useState<TodoFolder[]>([]);
   const [todoTasks, setTodoTasks] = useState<TodoTask[]>([]);
   const [todoNotes, setTodoNotes] = useState<TodoNote[]>([]);
+  const [followUpItems, setFollowUpItems] = useState<FollowUpItem[]>([]);
   const [knowledgeDocs, setKnowledgeDocs] = useState<KnowledgeDoc[]>([]);
 
   // Senhas e Proteção
@@ -158,6 +161,7 @@ const App: React.FC = () => {
         });
         setTodoNotes(sorted);
       }),
+      db.collection('follow_up_items').where(...filter).onSnapshot(s => setFollowUpItems(s.docs.map(d => ({ ...d.data(), id: d.id }) as FollowUpItem))),
       db.collection('knowledge_docs').where(...filter).onSnapshot(s => setKnowledgeDocs(s.docs.map(d => ({ ...d.data(), id: d.id }) as KnowledgeDoc))),
       db.collection('app_settings').doc(user.uid).onSnapshot(doc => {
         if (doc.exists) {
@@ -322,6 +326,13 @@ const App: React.FC = () => {
               folders={todoFolders}
               tasks={todoTasks}
               notes={todoNotes}
+              user={user}
+              db={db}
+            />
+          )}
+          {activeTab === 'follow-up' && (
+            <FollowUpView
+              items={followUpItems}
               user={user}
               db={db}
             />

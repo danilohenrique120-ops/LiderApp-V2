@@ -12,7 +12,8 @@ import {
     Clock,
     DollarSign,
     Layout,
-    Users
+    Users,
+    AlertTriangle
 } from 'lucide-react';
 import { Project } from '../types';
 import { ProjectService } from '../services/ProjectService';
@@ -31,7 +32,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
     const [formData, setFormData] = useState<Partial<Project>>({
         title: '',
         description: '',
-        status: 'todo',
+        status: 'planning',
         priority: 'medium',
         dueDate: new Date().toISOString().split('T')[0],
         budget: 0,
@@ -184,7 +185,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
             setFormData({
                 title: '',
                 description: '',
-                status: 'todo',
+                status: 'planning',
                 priority: 'medium',
                 dueDate: new Date().toISOString().split('T')[0],
                 budget: 0,
@@ -279,8 +280,8 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
             <div className="flex flex-col h-full bg-slate-900/50 rounded-2xl border border-slate-800/50 backdrop-blur-sm overflow-hidden">
                 <div className="p-4 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900/90 z-10 backdrop-blur-md">
                     <div className="flex items-center gap-2">
-                        <div className={`p-2 rounded-lg ${status === 'todo' ? 'bg-slate-800' : status === 'in-progress' ? 'bg-blue-900/30' : 'bg-emerald-900/30'}`}>
-                            {React.createElement(icon, { size: 16, className: status === 'todo' ? 'text-slate-400' : status === 'in-progress' ? 'text-blue-400' : 'text-emerald-400' })}
+                        <div className={`p-2 rounded-lg ${status === 'planning' ? 'bg-slate-800' : status === 'in-progress' ? 'bg-blue-900/30' : status === 'blocked' ? 'bg-amber-900/30' : 'bg-emerald-900/30'}`}>
+                            {React.createElement(icon, { size: 16, className: status === 'planning' ? 'text-slate-400' : status === 'in-progress' ? 'text-blue-400' : status === 'blocked' ? 'text-amber-400' : 'text-emerald-400' })}
                         </div>
                         <h3 className="font-bold text-slate-300 text-sm uppercase tracking-wider">{title}</h3>
                     </div>
@@ -357,14 +358,19 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
 
                                         {/* Move Actions */}
                                         <div className="flex bg-slate-900 rounded-lg p-0.5">
-                                            {status !== 'todo' && (
-                                                <button onClick={() => handleStatusChange(project.id, 'todo')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-white" title="Mover para A Fazer">
+                                            {status !== 'planning' && (
+                                                <button onClick={() => handleStatusChange(project.id, 'planning')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-white" title="Mover para Planejamento">
                                                     <div className="w-2 h-2 rounded-full bg-slate-500"></div>
                                                 </button>
                                             )}
                                             {status !== 'in-progress' && (
                                                 <button onClick={() => handleStatusChange(project.id, 'in-progress')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-blue-400" title="Mover para Em Andamento">
                                                     <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                                </button>
+                                            )}
+                                            {status !== 'blocked' && (
+                                                <button onClick={() => handleStatusChange(project.id, 'blocked')} className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-amber-400" title="Mover para Em Pausa/Bloqueado">
+                                                    <div className="w-2 h-2 rounded-full bg-amber-500"></div>
                                                 </button>
                                             )}
                                             {status !== 'done' && (
@@ -408,9 +414,10 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                 </button>
             </header>
 
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden min-h-0 pb-2">
-                {renderColumn('A Fazer', 'todo', AlertCircle)}
-                {renderColumn('Em Execução', 'in-progress', Clock)}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 overflow-hidden min-h-0 pb-2">
+                {renderColumn('Planejamento', 'planning', Layout)}
+                {renderColumn('Em Andamento', 'in-progress', Clock)}
+                {renderColumn('Pausado/Bloqueado', 'blocked', AlertTriangle)}
                 {renderColumn('Concluído', 'done', CheckCircle2)}
             </div>
 
@@ -460,8 +467,9 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                                                     onChange={e => setFormData({ ...formData, status: e.target.value as any })}
                                                     className="w-full !bg-slate-800 !text-white border-2 border-slate-700/50 rounded-lg px-3 py-2.5 appearance-none focus:border-blue-500 outline-none transition-all font-bold text-xs"
                                                 >
-                                                    <option value="todo">A Fazer</option>
-                                                    <option value="in-progress">Em Execução</option>
+                                                    <option value="planning">Planejamento</option>
+                                                    <option value="in-progress">Em Andamento</option>
+                                                    <option value="blocked">Em Pausa/Bloqueado</option>
                                                     <option value="done">Concluído</option>
                                                 </select>
                                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">

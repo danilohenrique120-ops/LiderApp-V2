@@ -15,7 +15,8 @@ import {
   UserCheck,
   LogOut,
   Layout,
-  HelpCircle
+  HelpCircle,
+  Clock
 } from 'lucide-react';
 import { LogoIcon } from '../constants';
 
@@ -35,6 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onNavigate, onLogout, onSt
         { id: 'dashboard', label: 'Visão Geral', icon: Home },
         { id: 'projects', label: 'Projetos & Kanban', icon: Layout },
         { id: 'todo', label: 'Agenda Operacional', icon: CheckSquare },
+        { id: 'follow-up', label: 'Follow-up', icon: Clock },
         { id: 'dds', label: 'DDS Inteligente', icon: Sparkles },
       ]
     },

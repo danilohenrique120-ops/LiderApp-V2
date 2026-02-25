@@ -204,7 +204,7 @@ export interface Project {
   id: string;
   title: string;
   description: string;
-  status: 'todo' | 'in-progress' | 'done';
+  status: 'planning' | 'in-progress' | 'blocked' | 'done';
   priority: 'low' | 'medium' | 'high';
   dueDate: string; // ISO format
   budget?: number;
@@ -226,4 +226,14 @@ export interface User {
     date: string; // YYYY-MM-DD
     content: string;
   };
+}
+
+export interface FollowUpItem {
+  id: string;
+  task: string;
+  responsible: string;
+  deadline: string; // YYYY-MM-DD
+  status: 'pending' | 'completed';
+  uid: string;
+  createdAt: any;
 }
