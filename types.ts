@@ -42,6 +42,7 @@ export interface Goal {
   text: string;
   deadline: string;
   completed: boolean;
+  category?: '70% (Prática/Experiência)' | '20% (Mentoria/Exposição)' | '10% (Cursos/Educação)' | string;
 }
 
 export interface PDI {
@@ -60,7 +61,11 @@ export interface Meeting {
   id: string;
   employee: string;
   date: string;
-  summary: string;
+  summary?: string;
+  recognition?: string;
+  improvements?: string;
+  employeeActions?: string;
+  managerActions?: string;
   uid: string;
   createdAt: any;
 }

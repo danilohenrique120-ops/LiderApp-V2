@@ -15,8 +15,18 @@ const FollowUpView: React.FC<FollowUpViewProps> = ({ items, user, db }) => {
     const [newDeadline, setNewDeadline] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // New states for toggles and inline editing
+    const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
+    const [editingItemId, setEditingItemId] = useState<string | null>(null);
+    const [editingDate, setEditingDate] = useState<string>('');
+
     const pendingItems = items.filter(item => item.status === 'pending')
         .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+
+    const completedItems = items.filter(item => item.status === 'completed')
+        .sort((a, b) => new Date(b.createdAt?.toMillis() || 0).getTime() - new Date(a.createdAt?.toMillis() || 0).getTime());
+
+    const displayedItems = activeTab === 'pending' ? pendingItems : completedItems;
 
     const isOverdue = (deadline: string) => {
         const today = new Date();
@@ -68,6 +78,20 @@ const FollowUpView: React.FC<FollowUpViewProps> = ({ items, user, db }) => {
             } catch (error) {
                 console.error("Erro ao excluir item:", error);
             }
+        }
+    };
+
+    const handleUpdateDeadline = async (id: string) => {
+        if (!editingDate) return;
+        try {
+            await db.collection('follow_up_items').doc(id).update({
+                deadline: editingDate
+            });
+            setEditingItemId(null);
+            setEditingDate('');
+        } catch (error) {
+            console.error("Erro ao atualizar data:", error);
+            alert("Erro ao atualizar a data.");
         }
     };
 
@@ -133,60 +157,133 @@ const FollowUpView: React.FC<FollowUpViewProps> = ({ items, user, db }) => {
 
             {/* Tabela/Lista Limpa */}
             <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col shadow-xl">
-                <div className="p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between sticky top-0">
-                    <h3 className="text-slate-300 font-bold uppercase tracking-wider text-sm flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                        Pendências Ativas ({pendingItems.length})
-                    </h3>
+                <div className="p-4 border-b border-slate-800 bg-slate-950 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-10">
+                    <div className="flex bg-slate-900 rounded-xl p-1 border border-slate-800">
+                        <button
+                            onClick={() => setActiveTab('pending')}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'pending'
+                                    ? 'bg-slate-800 text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-300'
+                                }`}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${activeTab === 'pending' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-slate-700'}`}></span>
+                            Pendentes ({pendingItems.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('completed')}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'completed'
+                                    ? 'bg-slate-800 text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-300'
+                                }`}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${activeTab === 'completed' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-700'}`}></span>
+                            Concluídas ({completedItems.length})
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-                    {pendingItems.length === 0 ? (
+                    {displayedItems.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-slate-500 opacity-60">
-                            <CheckCircle2 size={48} className="mb-4 text-emerald-500 border-4 border-emerald-500/20 rounded-full" />
-                            <p className="font-bold uppercase tracking-widest text-sm">Tudo Limpo!</p>
-                            <p className="text-xs mt-2">Você não está aguardando retorno de ninguém no momento.</p>
+                            {activeTab === 'pending' ? (
+                                <>
+                                    <CheckCircle2 size={48} className="mb-4 text-emerald-500 border-4 border-emerald-500/20 rounded-full" />
+                                    <p className="font-bold uppercase tracking-widest text-sm">Tudo Limpo!</p>
+                                    <p className="text-xs mt-2">Você não está aguardando retorno de ninguém no momento.</p>
+                                </>
+                            ) : (
+                                <>
+                                    <Clock size={48} className="mb-4 text-slate-400" />
+                                    <p className="font-bold uppercase tracking-widest text-sm">Nenhum Histórico</p>
+                                    <p className="text-xs mt-2">Nenhum follow-up foi concluído ainda.</p>
+                                </>
+                            )}
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {pendingItems.map((item) => {
-                                const overdue = isOverdue(item.deadline);
+                            {displayedItems.map((item) => {
+                                const isCompleted = item.status === 'completed';
+                                const overdue = !isCompleted && isOverdue(item.deadline);
+                                const isEditing = editingItemId === item.id;
+
                                 return (
-                                    <div key={item.id} className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border transition-all hover:shadow-lg ${overdue ? 'bg-rose-950/20 border-rose-900/50 hover:border-rose-700' : 'bg-slate-800/50 border-slate-700 hover:border-blue-500/50'}`}>
+                                    <div key={item.id} className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border transition-all hover:shadow-lg 
+                                        ${isCompleted ? 'bg-emerald-950/10 border-emerald-900/30 opacity-70' :
+                                            overdue ? 'bg-rose-950/20 border-rose-900/50 hover:border-rose-700' : 'bg-slate-800/50 border-slate-700 hover:border-blue-500/50'}`}>
 
                                         <div className="flex-1 mb-4 md:mb-0">
-                                            <h4 className="text-white font-bold text-base mb-1">{item.task}</h4>
+                                            <h4 className={`font-bold text-base mb-1 ${isCompleted ? 'text-slate-400 line-through' : 'text-white'}`}>{item.task}</h4>
                                             <div className="flex items-center gap-4 text-xs font-medium text-slate-400">
-                                                <span className="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800"><User size={12} className="text-blue-400" /> {item.responsible}</span>
+                                                <span className="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800">
+                                                    <User size={12} className={isCompleted ? "text-slate-500" : "text-blue-400"} />
+                                                    {item.responsible}
+                                                </span>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-6">
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Status</span>
-                                                {overdue ? (
-                                                    <span className="px-3 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-lg text-xs font-black uppercase tracking-wider animate-pulse flex items-center gap-1.5">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Prazo / Status</span>
+
+                                                {isEditing ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            type="date"
+                                                            value={editingDate}
+                                                            onChange={(e) => setEditingDate(e.target.value)}
+                                                            className="bg-slate-900 border border-blue-500 text-white rounded p-1 text-xs outline-none"
+                                                            style={{ colorScheme: 'dark' }}
+                                                        />
+                                                        <button
+                                                            onClick={() => handleUpdateDeadline(item.id)}
+                                                            className="text-xs font-bold uppercase bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-500"
+                                                        >
+                                                            Salvar
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditingItemId(null)}
+                                                            className="text-xs font-bold uppercase bg-slate-700 text-white px-2 py-1 rounded hover:bg-slate-600"
+                                                        >
+                                                            X
+                                                        </button>
+                                                    </div>
+                                                ) : isCompleted ? (
+                                                    <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                                        <CheckCircle2 size={12} /> Concluído
+                                                    </span>
+                                                ) : overdue ? (
+                                                    <span
+                                                        onClick={() => { setEditingItemId(item.id); setEditingDate(item.deadline); }}
+                                                        className="px-3 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-lg text-xs font-black uppercase tracking-wider animate-pulse flex items-center gap-1.5 cursor-pointer hover:bg-rose-500/20 transition-colors"
+                                                        title="Clique para alterar a data"
+                                                    >
                                                         <Clock size={12} /> Atrasado ({item.deadline.split('-').reverse().join('/')})
                                                     </span>
                                                 ) : (
-                                                    <span className="px-3 py-1 bg-slate-900 text-slate-300 border border-slate-700 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                                    <span
+                                                        onClick={() => { setEditingItemId(item.id); setEditingDate(item.deadline); }}
+                                                        className="px-3 py-1 bg-slate-900 text-slate-300 border border-slate-700 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer hover:bg-slate-800 transition-colors"
+                                                        title="Clique para alterar a data"
+                                                    >
                                                         <Clock size={12} className="text-emerald-500" /> No Prazo ({item.deadline.split('-').reverse().join('/')})
                                                     </span>
                                                 )}
                                             </div>
 
                                             <div className="flex items-center gap-2 pl-4 border-l border-slate-700/50">
-                                                <button
-                                                    onClick={() => handleMarkComplete(item.id)}
-                                                    className="w-10 h-10 bg-slate-800 hover:bg-emerald-500/20 border-2 border-slate-700 hover:border-emerald-500 text-slate-400 hover:text-emerald-400 rounded-xl flex items-center justify-center transition-all"
-                                                    title="Marcar como recebido/concluído"
-                                                >
-                                                    <CheckCircle2 size={18} />
-                                                </button>
+                                                {!isCompleted && (
+                                                    <button
+                                                        onClick={() => handleMarkComplete(item.id)}
+                                                        className="w-10 h-10 bg-slate-800 hover:bg-emerald-500/20 border-2 border-slate-700 hover:border-emerald-500 text-slate-400 hover:text-emerald-400 rounded-xl flex items-center justify-center transition-all"
+                                                        title="Marcar como recebido/concluído"
+                                                    >
+                                                        <CheckCircle2 size={18} />
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => handleDelete(item.id)}
                                                     className="w-10 h-10 bg-slate-800 hover:bg-rose-500/10 border-2 border-transparent text-slate-500 hover:text-rose-400 rounded-xl flex items-center justify-center transition-all"
-                                                    title="Excluir"
+                                                    title="Excluir Definitivamente"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>

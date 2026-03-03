@@ -19,11 +19,12 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
     const [selectedPdi, setSelectedPdi] = useState<PDI | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    
-    const [formData, setFormData] = useState({ 
+
+    const [formData, setFormData] = useState({
         employee: '', careerObjective: '', goals: [] as Goal[], generalComments: '', fixedResponsibilities: ''
     });
-    const [newGoal, setNewGoal] = useState({ text: '', deadline: '' });
+    const [newGoal, setNewGoal] = useState({ text: '', deadline: '', category: '70% (Prática/Experiência)' });
+    const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
 
     const exportToPDF = (elementId: string, filename: string) => {
         const element = document.getElementById(elementId);
@@ -42,14 +43,14 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (formData.goals.length === 0) { alert('Adicione ao menos uma meta.'); return; }
-        
+
         const data = { ...formData, uid: user.uid, status: 'Em Curso' };
         if (editingId) {
             await db.collection('pdis').doc(editingId).update(data);
         } else {
             await db.collection('pdis').add({ ...data, createdAt: new Date() });
         }
-        
+
         setFormData({ employee: '', careerObjective: '', goals: [], generalComments: '', fixedResponsibilities: '' });
         setEditingId(null);
         setShowForm(false);
@@ -57,8 +58,26 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
 
     const addGoal = () => {
         if (!newGoal.text || !newGoal.deadline) return;
-        setFormData({ ...formData, goals: [...formData.goals, { ...newGoal, completed: false, id: Date.now().toString() }] });
-        setNewGoal({ text: '', deadline: '' });
+
+        if (editingGoalId) {
+            // Update existing goal
+            setFormData({
+                ...formData,
+                goals: formData.goals.map(g =>
+                    g.id === editingGoalId
+                        ? { ...g, text: newGoal.text, deadline: newGoal.deadline, category: newGoal.category || '70% (Prática/Experiência)' }
+                        : g
+                )
+            });
+            setEditingGoalId(null);
+        } else {
+            // Add new goal
+            setFormData({
+                ...formData,
+                goals: [...formData.goals, { ...newGoal, category: newGoal.category || '70% (Prática/Experiência)', completed: false, id: Date.now().toString() }]
+            });
+        }
+        setNewGoal({ text: '', deadline: '', category: '70% (Prática/Experiência)' });
     };
 
     const toggleGoalStatus = async (pdiId: string, goalId: string) => {
@@ -66,9 +85,9 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
         if (!pdi) return;
         const updatedGoals = pdi.goals.map(g => g.id === goalId ? { ...g, completed: !g.completed } : g);
         await db.collection('pdis').doc(pdiId).update({ goals: updatedGoals });
-        
+
         if (selectedPdi && selectedPdi.id === pdiId) {
-            setSelectedPdi({...selectedPdi, goals: updatedGoals});
+            setSelectedPdi({ ...selectedPdi, goals: updatedGoals });
         }
     };
 
@@ -85,7 +104,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
         setSelectedPdi(null);
     };
 
-    const filteredPdis = pdis.filter(p => 
+    const filteredPdis = pdis.filter(p =>
         p.employee.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.careerObjective.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -97,8 +116,8 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                     <h2 className="text-4xl font-black text-slate-100 tracking-tighter uppercase leading-none">Gestão de PDIs</h2>
                     <p className="text-slate-400 font-medium text-sm mt-2 uppercase tracking-widest text-[10px]">Portal de Alto Desempenho e Carreira</p>
                 </div>
-                <button 
-                    onClick={() => { setShowForm(true); setEditingId(null); setFormData({ employee: '', careerObjective: '', goals: [], generalComments: '', fixedResponsibilities: '' }); }} 
+                <button
+                    onClick={() => { setShowForm(true); setEditingId(null); setFormData({ employee: '', careerObjective: '', goals: [], generalComments: '', fixedResponsibilities: '' }); }}
                     className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-100 transition-all hover:scale-105 flex items-center gap-2"
                 >
                     <Plus size={18} /> Novo Plano
@@ -107,7 +126,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
 
             <div className="mb-8 relative max-w-md">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input 
+                <input
                     type="text"
                     placeholder="Filtrar colaboradores..."
                     className="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 transition-all font-bold text-sm shadow-sm"
@@ -116,8 +135,8 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                 />
             </div>
 
-            <PDIListCompact 
-                pdis={filteredPdis} 
+            <PDIListCompact
+                pdis={filteredPdis}
                 onSelect={(pdi) => setSelectedPdi(pdi)}
                 selectedId={selectedPdi?.id || null}
             />
@@ -131,16 +150,16 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
             )}
 
             {/* --- DRAWER USANDO PORTAL --- */}
-            <PortalDrawer 
-                isOpen={!!selectedPdi} 
+            <PortalDrawer
+                isOpen={!!selectedPdi}
                 onClose={() => setSelectedPdi(null)}
                 title="Painel de Carreira"
             >
                 {selectedPdi && (
-                    <PDIDetailView 
+                    <PDIDetailView
                         pdi={selectedPdi}
                         onEdit={handleEdit}
-                        onDelete={async (id) => { if(confirm('Excluir PDI?')){ await db.collection('pdis').doc(id).delete(); setSelectedPdi(null); } }}
+                        onDelete={async (id) => { if (confirm('Excluir PDI?')) { await db.collection('pdis').doc(id).delete(); setSelectedPdi(null); } }}
                         onToggleGoal={toggleGoalStatus}
                         exportPdf={exportToPDF}
                     />
@@ -148,7 +167,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
             </PortalDrawer>
 
             {/* --- MODAL USANDO PORTAL --- */}
-            <PDIFormModal 
+            <PDIFormModal
                 isOpen={showForm}
                 editingId={editingId}
                 employees={employees}
@@ -156,9 +175,15 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                 setFormData={setFormData}
                 newGoal={newGoal}
                 setNewGoal={setNewGoal}
+                editingGoalId={editingGoalId}
+                setEditingGoalId={setEditingGoalId}
                 onAddGoal={addGoal}
                 onSave={handleSave}
-                onClose={() => setShowForm(false)}
+                onClose={() => {
+                    setShowForm(false);
+                    setEditingGoalId(null);
+                    setNewGoal({ text: '', deadline: '', category: '70% (Prática/Experiência)' });
+                }}
             />
         </div>
     );

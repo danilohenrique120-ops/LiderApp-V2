@@ -17,7 +17,7 @@ const PDIDetailView: React.FC<PDIDetailViewProps> = ({ pdi, onEdit, onDelete, on
   const goals = pdi.goals || [];
   const completedCount = goals.filter(g => g.completed).length;
   const progress = goals.length > 0 ? Math.round((completedCount / goals.length) * 100) : 0;
-  
+
   // Identifica a meta atual (primeira não concluída)
   const currentGoalIndex = goals.findIndex(g => !g.completed);
 
@@ -55,19 +55,31 @@ const PDIDetailView: React.FC<PDIDetailViewProps> = ({ pdi, onEdit, onDelete, on
               <span className="text-xl font-black text-blue-600">{progress}%</span>
             </div>
             <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5">
-              <div 
+              <div
                 className="h-full bg-blue-600 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(37,99,235,0.4)]"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
         </div>
+
+        {pdi.fixedResponsibilities && (
+          <div className="bg-slate-50 border border-slate-200 p-6 rounded-3xl mt-4">
+            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em] mb-2 flex items-center gap-2">
+              <Circle size={10} className="fill-slate-300 text-slate-300" />
+              Responsabilidades da Função Atual (O "Arroz com Feijão")
+            </h3>
+            <p className="text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
+              {pdi.fixedResponsibilities}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Timeline Visual (Jornada) */}
       <div className="space-y-4">
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Milestones e Metas</h3>
-        
+
         <div className="space-y-0 ml-4 border-l-2 border-slate-100">
           {goals.map((goal, index) => {
             const isCompleted = goal.completed;
@@ -78,27 +90,33 @@ const PDIDetailView: React.FC<PDIDetailViewProps> = ({ pdi, onEdit, onDelete, on
             return (
               <div key={goal.id} className="relative pl-10 pb-10 last:pb-0">
                 {/* Marcador flutuante na linha */}
-                <div className={`absolute left-[-11px] top-0 w-5 h-5 rounded-full border-4 ${
-                  isCompleted ? 'bg-emerald-500 border-emerald-100' :
-                  isFocussed ? 'bg-blue-600 border-blue-100 animate-pulse' :
-                  'bg-white border-slate-200'
-                }`} />
+                <div className={`absolute left-[-11px] top-0 w-5 h-5 rounded-full border-4 ${isCompleted ? 'bg-emerald-500 border-emerald-100' :
+                    isFocussed ? 'bg-blue-600 border-blue-100 animate-pulse' :
+                      'bg-white border-slate-200'
+                  }`} />
 
-                <div className={`p-6 rounded-[2rem] border transition-all ${
-                  isCompleted ? 'bg-emerald-50/20 border-emerald-100 opacity-70' :
-                  isFocussed ? 'bg-white border-blue-200 shadow-xl shadow-blue-50/50 scale-[1.02]' :
-                  'bg-white border-slate-100 opacity-50'
-                }`}>
+                <div className={`p-6 rounded-[2rem] border transition-all ${isCompleted ? 'bg-emerald-50/20 border-emerald-100 opacity-70' :
+                    isFocussed ? 'bg-white border-blue-200 shadow-xl shadow-blue-50/50 scale-[1.02]' :
+                      'bg-white border-slate-100 opacity-50'
+                  }`}>
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                          isCompleted ? 'bg-emerald-100 text-emerald-700' :
-                          isOverdue ? 'bg-red-100 text-red-600' :
-                          isFocussed ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'
-                        }`}>
+                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isCompleted ? 'bg-emerald-100 text-emerald-700' :
+                            isOverdue ? 'bg-red-100 text-red-600' :
+                              isFocussed ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'
+                          }`}>
                           {isCompleted ? 'Concluído' : isOverdue ? 'Atrasado' : isFocussed ? 'Foco Atual' : 'Planejado'}
                         </span>
+                        {goal.category && (
+                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${goal.category.includes('70%') ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              goal.category.includes('20%') ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                goal.category.includes('10%') ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                                  'bg-slate-50 text-slate-600 border-slate-200'
+                            }`}>
+                            {goal.category.split(' ')[0]} {/* Mostrará apenas "70%", "20%" ou "10%" no badge para economizar espaço */}
+                          </span>
+                        )}
                         <span className="text-[9px] font-bold text-slate-400 flex items-center gap-1">
                           <Clock size={10} /> {goal.deadline}
                         </span>
@@ -107,9 +125,9 @@ const PDIDetailView: React.FC<PDIDetailViewProps> = ({ pdi, onEdit, onDelete, on
                         {goal.text}
                       </h4>
                     </div>
-                    
+
                     {!isCompleted && (
-                      <button 
+                      <button
                         onClick={() => onToggleGoal(pdi.id, goal.id)}
                         className="p-3 bg-slate-900 text-white rounded-xl hover:bg-emerald-500 transition-all shadow-md active:scale-90"
                       >
