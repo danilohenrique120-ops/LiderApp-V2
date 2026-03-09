@@ -1,19 +1,19 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
-    ShieldAlert, 
-    Search, 
-    CheckCircle2, 
-    ChevronRight, 
-    ChevronDown, 
+import {
+    ShieldAlert,
+    Search,
+    CheckCircle2,
+    ChevronRight,
+    ChevronDown,
     ChevronUp,
-    Clock, 
-    Send, 
-    RotateCcw, 
-    AlertTriangle, 
-    ListChecks, 
-    FileText, 
-    Layout, 
+    Clock,
+    Send,
+    RotateCcw,
+    AlertTriangle,
+    ListChecks,
+    FileText,
+    Layout,
     MessageCircle,
     Brain,
     PanelRightOpen,
@@ -75,11 +75,10 @@ const ProgressStepper = ({ currentStep }: { currentStep: number }) => (
             const isActive = currentStep === s.id;
             return (
                 <div key={s.id} className="relative z-10 flex flex-col items-center gap-2">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border-4 ${
-                        isCompleted ? 'bg-emerald-500 border-emerald-100 text-white' :
-                        isActive ? 'bg-blue-600 border-blue-100 text-white scale-110 shadow-lg shadow-blue-200' :
-                        'bg-white border-slate-100 text-slate-300'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border-4 ${isCompleted ? 'bg-emerald-500 border-emerald-100 text-white' :
+                            isActive ? 'bg-blue-600 border-blue-100 text-white scale-110 shadow-lg shadow-blue-200' :
+                                'bg-white border-slate-100 text-slate-300'
+                        }`}>
                         {isCompleted ? <CheckCircle2 size={20} /> : <s.icon size={18} />}
                     </div>
                     <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'text-blue-600' : 'text-slate-400'}`}>
@@ -118,14 +117,16 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
         actions: [],
         isSidebarOpen: true
     });
-    
+
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    
+
     const scrollRef = useRef<HTMLDivElement>(null);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Safe initialization for Vite environments
+    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' && process.env ? process.env.API_KEY : '');
+    const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
     // Auto-save logic (Debounce)
     useEffect(() => {
@@ -177,7 +178,7 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
         try {
             // Lógica de Transição de Etapa e Mock AI
             await new Promise(res => setTimeout(res, 1000)); // Simular pensamento
-            
+
             let aiResponse = "";
             let nextStep = state.step;
 
@@ -192,7 +193,7 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
             } else if (state.step === 3) {
                 const updatedWhys = [...state.whys, text];
                 setState(prev => ({ ...prev, whys: updatedWhys }));
-                
+
                 if (updatedWhys.length < 3) {
                     aiResponse = `Entendido. E **por que** [${text}] aconteceu?`;
                 } else {
@@ -219,7 +220,7 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
     const handleToggleAction = (action: string) => {
         setState(prev => ({
             ...prev,
-            actions: prev.actions.includes(action) 
+            actions: prev.actions.includes(action)
                 ? prev.actions.filter(a => a !== action)
                 : [...prev.actions, action]
         }));
@@ -227,15 +228,15 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
 
     return (
         <div className="flex h-[calc(100vh-140px)] bg-slate-50/30 rounded-[3rem] overflow-hidden relative border border-slate-100 shadow-2xl animate-fade">
-            
+
             {/* Sidebar de Resumo (Desktop) */}
             <aside className={`bg-white border-l transition-all duration-500 overflow-y-auto custom-scrollbar flex flex-col ${state.isSidebarOpen ? 'w-80' : 'w-0 opacity-0 border-none'}`}>
                 <div className="p-8">
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
-                        <Save size={14} className={isSaving ? 'text-emerald-500 animate-pulse' : ''} /> 
+                        <Save size={14} className={isSaving ? 'text-emerald-500 animate-pulse' : ''} />
                         {isSaving ? 'Salvando...' : 'Resumo em Tempo Real'}
                     </h3>
-                    
+
                     <div className="space-y-6">
                         <section>
                             <h4 className="text-[9px] font-black text-blue-600 uppercase mb-2">Descrição</h4>
@@ -250,7 +251,7 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
                             <div className="space-y-2">
                                 {state.whys.map((w, i) => (
                                     <div key={i} className="flex gap-2">
-                                        <span className="text-[9px] font-black text-slate-300 mt-1">{i+1}º</span>
+                                        <span className="text-[9px] font-black text-slate-300 mt-1">{i + 1}º</span>
                                         <p className="text-xs text-slate-600 italic font-medium">"{w}"</p>
                                     </div>
                                 ))}
@@ -272,12 +273,12 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
 
             {/* Área Principal de Chat/Wizard */}
             <div className="flex-1 flex flex-col min-w-0 bg-white shadow-inner">
-                
+
                 {/* Header Contextual */}
                 <header className="px-10 py-8 border-b bg-white/50 backdrop-blur-md sticky top-0 z-30">
                     <nav className="flex items-center gap-2 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-6">
-                        <Home size={12} /> Home <ChevronRight size={10} /> 
-                        <Search size={12} /> Análise de Causa <ChevronRight size={10} /> 
+                        <Home size={12} /> Home <ChevronRight size={10} />
+                        <Search size={12} /> Análise de Causa <ChevronRight size={10} />
                         <span className="text-blue-600">Nova Investigação</span>
                     </nav>
                     <ProgressStepper currentStep={state.step} />
@@ -285,19 +286,18 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
 
                 {/* Área de Chat com Accordion Behavior */}
                 <div ref={scrollRef} className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
-                    
+
                     {/* Renderização condicional por etapas concluídas */}
-                    {state.step > 1 && <StageSummaryCard stage={1} data={state.description} onReopen={() => setState(prev => ({...prev, step: 1}))} />}
-                    {state.step > 2 && <StageSummaryCard stage={2} data={state.standard} onReopen={() => setState(prev => ({...prev, step: 2}))} />}
+                    {state.step > 1 && <StageSummaryCard stage={1} data={state.description} onReopen={() => setState(prev => ({ ...prev, step: 1 }))} />}
+                    {state.step > 2 && <StageSummaryCard stage={2} data={state.standard} onReopen={() => setState(prev => ({ ...prev, step: 2 }))} />}
 
                     {/* Chat da Etapa Atual */}
                     <div className="space-y-6">
                         {messages.filter(m => m.stage === state.step || m.role === 'ai').map((m, idx) => (
                             <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade`}>
-                                <div className={`max-w-[80%] p-6 rounded-[2.5rem] text-sm leading-relaxed shadow-sm ${
-                                    m.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none font-bold' : 
-                                    'bg-slate-50 text-slate-800 border border-slate-100 rounded-tl-none font-medium'
-                                }`}>
+                                <div className={`max-w-[80%] p-6 rounded-[2.5rem] text-sm leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none font-bold' :
+                                        'bg-slate-50 text-slate-800 border border-slate-100 rounded-tl-none font-medium'
+                                    }`}>
                                     {m.text.split('\n').map((line, i) => <p key={i} className="mb-2 last:mb-0">{line}</p>)}
                                     <div className={`mt-2 text-[9px] font-black uppercase opacity-40 flex items-center gap-1 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                         <Clock size={10} /> {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -319,7 +319,7 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
                 {/* Footer Adaptativo */}
                 <footer className="p-8 bg-white border-t border-slate-50">
                     <div className="max-w-4xl mx-auto space-y-4">
-                        
+
                         {/* Contexto dos 5 Porquês (Etapa 3) */}
                         {state.step === 3 && state.whys.length > 0 && (
                             <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 p-4 rounded-2xl animate-fade">
@@ -334,24 +334,22 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
                         {state.step === 4 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade">
                                 {SUGGESTED_ACTIONS.map((action, i) => (
-                                    <button 
+                                    <button
                                         key={i}
                                         onClick={() => handleToggleAction(action)}
-                                        className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
-                                            state.actions.includes(action) 
-                                                ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-md' 
+                                        className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${state.actions.includes(action)
+                                                ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-md'
                                                 : 'bg-white border-slate-100 text-slate-600 hover:border-blue-200'
-                                        }`}
+                                            }`}
                                     >
-                                        <div className={`w-5 h-5 rounded-lg flex items-center justify-center border-2 ${
-                                            state.actions.includes(action) ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-100'
-                                        }`}>
+                                        <div className={`w-5 h-5 rounded-lg flex items-center justify-center border-2 ${state.actions.includes(action) ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-100'
+                                            }`}>
                                             {state.actions.includes(action) && <CheckSquare size={14} />}
                                         </div>
                                         <span className="text-xs font-bold leading-tight">{action}</span>
                                     </button>
                                 ))}
-                                <button 
+                                <button
                                     onClick={() => handleSend("Concluir investigação com as ações selecionadas.")}
                                     className="md:col-span-2 bg-slate-900 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-3 mt-4 hover:bg-slate-800 transition-all"
                                 >
@@ -362,21 +360,21 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
 
                         {/* Input Padrão (Etapas 1 a 3) */}
                         {state.step < 4 && (
-                            <form 
-                                onSubmit={(e) => { e.preventDefault(); handleSend(); }} 
+                            <form
+                                onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                                 className="bg-slate-50 border border-slate-200 rounded-[2.5rem] p-2 flex items-center gap-2 focus-within:shadow-xl focus-within:border-blue-300 transition-all"
                             >
-                                <button type="button" onClick={() => setState(prev => ({...prev, isSidebarOpen: !prev.isSidebarOpen}))} className="p-4 text-slate-400 hover:text-blue-500">
+                                <button type="button" onClick={() => setState(prev => ({ ...prev, isSidebarOpen: !prev.isSidebarOpen }))} className="p-4 text-slate-400 hover:text-blue-500">
                                     {state.isSidebarOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
                                 </button>
-                                <input 
+                                <input
                                     className="flex-1 bg-transparent border-none outline-none py-4 px-2 text-sm font-medium placeholder:text-slate-400"
                                     placeholder="Digite sua resposta técnica aqui..."
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     disabled={isGenerating}
                                 />
-                                <button 
+                                <button
                                     type="submit"
                                     disabled={isGenerating || !input.trim()}
                                     className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 disabled:opacity-30 transition-all"

@@ -389,6 +389,15 @@ const App: React.FC = () => {
         pdis={pdis}
         productionData={productionData}
         investigations={humanErrorInvestigations}
+        meetings={meetings}
+        skills={skills}
+        procedures={procedures}
+        trainingRecords={trainingRecords}
+        todoFolders={todoFolders}
+        todoTasks={todoTasks}
+        todoNotes={todoNotes}
+        followUpItems={followUpItems}
+        knowledgeDocs={knowledgeDocs}
       />
 
       {/* Password Gate Modal */}

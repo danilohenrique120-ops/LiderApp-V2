@@ -11,7 +11,8 @@ export class AiService {
   private isEnabled: boolean = false;
 
   private constructor() {
-    const apiKey = process.env.API_KEY;
+    // In Vite, we should use import.meta.env, but gracefully fallback just in case
+    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined);
     if (apiKey) {
       this.ai = new GoogleGenAI({ apiKey });
       this.isEnabled = true;
@@ -32,32 +33,45 @@ export class AiService {
    * Realiza cruzamento de dados de toda a unidade para suporte à decisão.
    */
   public async queryStrategicConsultant(prompt: string, contextData: any): Promise<string> {
-    if (!this.isEnabled || !this.ai) return "IA não disponível (Chave de API não configurada).";
+    const currentApiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined);
+
+    if (!currentApiKey || currentApiKey.trim() === '') {
+      return "ERRO: Chave de API do Gemini não configurada no arquivo .env";
+    }
+
+    if (!this.ai) {
+      this.ai = new GoogleGenAI({ apiKey: currentApiKey });
+      this.isEnabled = true;
+    }
     try {
       const response = await this.ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-2.5-flash',
         contents: `
           CONTEXTO OPERACIONAL DA UNIDADE:
           ${JSON.stringify(contextData)}
 
-          PERGUNTA DO GESTOR:
+          PERGUNTA DO USUÁRIO:
           "${prompt}"
 
-          SUA MISSÃO:
-          1. Analise os dados brutos (Matriz, OEE, PDIs, Erros) para encontrar a resposta.
-          2. Seja extremamente analítico e estratégico.
-          3. Se a pergunta for sobre pessoas, cite nomes baseados nas skills reais.
-          4. Se for sobre performance, cruze os erros humanos com a queda de OEE.
-          5. Use um tom de Tech Lead/Consultor de Operações.
+          SUA MISSÃO TÁTICA:
+          1. Responda a dúvidas sobre como usar a aplicação LiderApp.
+          2. Sugira boas práticas de liderança e gestão.
+          3. Oriente o usuário sobre onde encontrar as funcionalidades (ex: Dashboard, Projetos, Agenda, DDS, PDI, 1:1, Follow-up).
+          4. Mantenha um tom encorajador e profissional de um Diretor conselheiro.
         `,
         config: {
-          systemInstruction: "Você é o Diretor de Operações Virtual do Sistema Líder. Você tem acesso a todos os dados da fábrica e sua função é dar respostas precisas para otimizar a produção e a gestão de pessoas."
+          systemInstruction: "És o Copiloto do Sistema Líder. O teu objetivo é ajudar o gestor a utilizar a aplicação. Conheces todos os módulos: Dashboard, Projetos (Macro Kanban), Agenda, DDS, PDI, 1:1, Follow-up, etc. Responde a dúvidas sobre como usar a app, sugere boas práticas de liderança e orienta o utilizador sobre onde encontrar cada funcionalidade."
         }
       });
       return response.text || "Não consegui processar a análise estratégica agora.";
-    } catch (error) {
-      console.error("Strategic Consultant Error:", error);
-      return "Erro na conexão com a central de estratégia.";
+    } catch (error: any) {
+      console.error("==== DETALHES DO ERRO DA API GEMINI ====");
+      console.error(error);
+      if (error?.status) console.error("Status HTTP:", error.status);
+      if (error?.message) console.error("Mensagem de Erro:", error.message);
+      console.error("========================================");
+
+      return `Erro na conexão com a central de estratégia: ${error?.message || 'Falha desconhecida.'}`;
     }
   }
 
@@ -111,10 +125,10 @@ export class AiService {
   public async analyzeProactiveRisks(risks: string[]): Promise<string> {
     if (risks.length === 0) return "Operação estável. Todos os indicadores dentro do padrão.";
     if (!this.isEnabled || !this.ai) return "Análise de riscos indisponível (API Key missing).";
-    
+
     try {
       const response = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         contents: `
           Como seu Co-Piloto de Operações, analise estes riscos detectados no sistema:
           ${risks.join('\n')}
@@ -139,7 +153,7 @@ export class AiService {
    */
   public async generateDds(prompt: string, config: { duration: number, tone: string }): Promise<DdsResponse> {
     if (!this.isEnabled || !this.ai) throw new Error("Serviço de IA não configurado.");
-    const model = 'gemini-3-flash-preview';
+    const model = 'gemini-1.5-flash';
     try {
       const response = await this.ai.models.generateContent({
         model,
@@ -172,7 +186,7 @@ export class AiService {
     if (!this.isEnabled || !this.ai) return description;
     try {
       const response = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         contents: `Refine e profissionalize a descrição desta ocorrência industrial: "${description}".`,
         config: { systemInstruction: "Você é um Engenheiro de Processos Sênior. Transforme relatos informais em registros profissionais." }
       });
@@ -186,7 +200,7 @@ export class AiService {
     if (!this.isEnabled || !this.ai) return "";
     try {
       const response = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         contents: `
           Analise a consistência técnica desta investigação:
           1. TWTTP Inicial: ${JSON.stringify(twttp)}
@@ -208,7 +222,7 @@ export class AiService {
     const isKnowledgeGap = !hercaFactors || hercaFactors.length === 0;
     try {
       const response = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         contents: `
           TIPO DE FALHA: ${isKnowledgeGap ? "GAP DE CONHECIMENTO" : "FALHA SISTÊMICA"}
           DETALHES: ${JSON.stringify(twttpAdvanced || hercaFactors)}
@@ -227,7 +241,7 @@ export class AiService {
     if (!this.isEnabled || !this.ai) throw new Error("Simulação indisponível.");
     try {
       const response = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         contents: message,
         config: {
           systemInstruction: systemContext,
@@ -244,7 +258,7 @@ export class AiService {
     if (!this.isEnabled || !this.ai) throw new Error("Relatório indisponível.");
     try {
       const response = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-1.5-flash',
         contents: `Analise este histórico e gere relatório JSON:\n${history}`,
         config: {
           systemInstruction: "Você é um Mentor de Liderança.",
