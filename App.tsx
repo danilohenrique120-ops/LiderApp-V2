@@ -27,7 +27,6 @@ import CauseAnalysisView from './components/CauseAnalysisView';
 import ComplianceView from './components/ComplianceView';
 import Sidebar from './components/Sidebar';
 import NativeTour from './components/NativeTour';
-import StrategicConsultant from './components/StrategicConsultant';
 import ProjectsView from './components/ProjectsView';
 import FollowUpView from './components/FollowUpView';
 import {
@@ -382,23 +381,6 @@ const App: React.FC = () => {
           )}
         </div>
       </main>
-
-      {/* Strategic Consultant FAB Overlay */}
-      <StrategicConsultant
-        matrixData={matrixData}
-        pdis={pdis}
-        productionData={productionData}
-        investigations={humanErrorInvestigations}
-        meetings={meetings}
-        skills={skills}
-        procedures={procedures}
-        trainingRecords={trainingRecords}
-        todoFolders={todoFolders}
-        todoTasks={todoTasks}
-        todoNotes={todoNotes}
-        followUpItems={followUpItems}
-        knowledgeDocs={knowledgeDocs}
-      />
 
       {/* Password Gate Modal */}
       {showPasswordModal && (
