@@ -76,8 +76,8 @@ const ProgressStepper = ({ currentStep }: { currentStep: number }) => (
             return (
                 <div key={s.id} className="relative z-10 flex flex-col items-center gap-2">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border-4 ${isCompleted ? 'bg-emerald-500 border-emerald-100 text-white' :
-                            isActive ? 'bg-blue-600 border-blue-100 text-white scale-110 shadow-lg shadow-blue-200' :
-                                'bg-white border-slate-100 text-slate-300'
+                        isActive ? 'bg-blue-600 border-blue-100 text-white scale-110 shadow-lg shadow-blue-200' :
+                            'bg-white border-slate-100 text-slate-300'
                         }`}>
                         {isCompleted ? <CheckCircle2 size={20} /> : <s.icon size={18} />}
                     </div>
@@ -227,10 +227,10 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
     };
 
     return (
-        <div className="flex h-[calc(100vh-140px)] bg-slate-50/30 rounded-[3rem] overflow-hidden relative border border-slate-100 shadow-2xl animate-fade">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-140px)] bg-slate-50/30 rounded-[3rem] overflow-hidden relative border border-slate-100 shadow-2xl animate-fade">
 
             {/* Sidebar de Resumo (Desktop) */}
-            <aside className={`bg-white border-l transition-all duration-500 overflow-y-auto custom-scrollbar flex flex-col ${state.isSidebarOpen ? 'w-80' : 'w-0 opacity-0 border-none'}`}>
+            <aside className={`bg-white border-l transition-all duration-500 overflow-y-auto custom-scrollbar flex flex-col ${state.isSidebarOpen ? 'w-full md:w-80' : 'h-0 md:h-auto w-0 opacity-0 border-none'}`}>
                 <div className="p-8">
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
                         <Save size={14} className={isSaving ? 'text-emerald-500 animate-pulse' : ''} />
@@ -296,7 +296,7 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
                         {messages.filter(m => m.stage === state.step || m.role === 'ai').map((m, idx) => (
                             <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade`}>
                                 <div className={`max-w-[80%] p-6 rounded-[2.5rem] text-sm leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none font-bold' :
-                                        'bg-slate-50 text-slate-800 border border-slate-100 rounded-tl-none font-medium'
+                                    'bg-slate-50 text-slate-800 border border-slate-100 rounded-tl-none font-medium'
                                     }`}>
                                     {m.text.split('\n').map((line, i) => <p key={i} className="mb-2 last:mb-0">{line}</p>)}
                                     <div className={`mt-2 text-[9px] font-black uppercase opacity-40 flex items-center gap-1 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -338,8 +338,8 @@ const RcaWizard: React.FC<{ investigations: HumanErrorInvestigation[] }> = ({ in
                                         key={i}
                                         onClick={() => handleToggleAction(action)}
                                         className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${state.actions.includes(action)
-                                                ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-md'
-                                                : 'bg-white border-slate-100 text-slate-600 hover:border-blue-200'
+                                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-md'
+                                            : 'bg-white border-slate-100 text-slate-600 hover:border-blue-200'
                                             }`}
                                     >
                                         <div className={`w-5 h-5 rounded-lg flex items-center justify-center border-2 ${state.actions.includes(action) ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-100'

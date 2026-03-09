@@ -414,11 +414,13 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userPlan }) => {
                 </button>
             </header>
 
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 overflow-hidden min-h-0 pb-2">
-                {renderColumn('Planejamento', 'planning', Layout)}
-                {renderColumn('Em Andamento', 'in-progress', Clock)}
-                {renderColumn('Pausado/Bloqueado', 'blocked', AlertTriangle)}
-                {renderColumn('Concluído', 'done', CheckCircle2)}
+            <div className="flex-1 overflow-x-auto custom-scrollbar pb-4 min-h-0 snap-x snap-mandatory">
+                <div className="flex md:grid md:grid-cols-4 gap-4 min-w-[1000px] md:min-w-0 h-full px-1">
+                    <div className="w-[85vw] md:w-auto flex-shrink-0 snap-center">{renderColumn('Planejamento', 'planning', Layout)}</div>
+                    <div className="w-[85vw] md:w-auto flex-shrink-0 snap-center">{renderColumn('Em Andamento', 'in-progress', Clock)}</div>
+                    <div className="w-[85vw] md:w-auto flex-shrink-0 snap-center">{renderColumn('Pausado/Bloqueado', 'blocked', AlertTriangle)}</div>
+                    <div className="w-[85vw] md:w-auto flex-shrink-0 snap-center">{renderColumn('Concluído', 'done', CheckCircle2)}</div>
+                </div>
             </div>
 
             {/* Modal de Criação/Edição */}

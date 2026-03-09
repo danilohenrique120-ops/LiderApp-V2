@@ -277,9 +277,9 @@ const App: React.FC = () => {
 
       {/* Content area */}
       <main className="flex-1 overflow-y-auto min-h-screen custom-scrollbar">
-        <header className="sticky top-0 z-40 px-6 md:px-10 py-6 bg-[#0F172A]/80 backdrop-blur-xl border-b border-slate-800 flex justify-end items-center">
-          <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2 text-slate-400">
-            <Menu size={24} />
+        <header className="sticky top-0 z-40 px-4 py-4 md:px-10 md:py-6 bg-[#0F172A]/80 backdrop-blur-xl border-b border-slate-800 flex justify-end items-center min-h-[64px]">
+          <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2 -mr-2 text-slate-400 hover:text-white transition-colors flex items-center justify-center">
+            <Menu size={28} />
           </button>
         </header>
 
