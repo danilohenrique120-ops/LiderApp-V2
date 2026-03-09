@@ -1,13 +1,13 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-    Search, 
-    Filter, 
-    UserPlus, 
-    MoreHorizontal, 
-    Mail, 
-    Briefcase, 
-    MapPin, 
+import {
+    Search,
+    Filter,
+    UserPlus,
+    MoreHorizontal,
+    Mail,
+    Briefcase,
+    MapPin,
     ChevronDown,
     User,
     X,
@@ -20,7 +20,8 @@ import {
     Plus,
     Save,
     Loader2,
-    RefreshCw
+    RefreshCw,
+    Pencil
 } from 'lucide-react';
 // @ts-ignore
 import firebase from 'firebase/compat/app';
@@ -38,6 +39,7 @@ const CollaboratorsPage: React.FC = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [updatingId, setUpdatingId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     // --- ESTADO DO FORMULÁRIO ---
     const [formData, setFormData] = useState({
@@ -84,34 +86,47 @@ const CollaboratorsPage: React.FC = () => {
         }
     };
 
-    // --- LÓGICA DE CADASTRO ---
-    const handleAddOperator = async (e: React.FormEvent) => {
+    // --- LÓGICA DE CADASTRO E EDIÇÃO ---
+    const handleSaveOperator = async (e: React.FormEvent) => {
         e.preventDefault();
         const user = firebase.auth().currentUser;
         if (!user || isSaving) return;
 
         setIsSaving(true);
         try {
-            const skillsMap = skills.reduce((acc, s) => {
-                const skillRule = PREREQUISITE_RULES[s.name];
-                const defaultP = skillRule ? (skillRule[formData.cargo] ?? 2) : 2;
-                return { ...acc, [s.name]: { p: defaultP, r: 0 } };
-            }, {});
+            if (editingId) {
+                await firebase.firestore().collection('operators').doc(editingId).update({
+                    name: formData.nome,
+                    role: formData.cargo,
+                    email: formData.email,
+                    shift: formData.turno,
+                    schedule: formData.escala,
+                    status: formData.status,
+                    departamento: formData.departamento
+                });
+            } else {
+                const skillsMap = skills.reduce((acc, s) => {
+                    const skillRule = PREREQUISITE_RULES[s.name];
+                    const defaultP = skillRule ? (skillRule[formData.cargo] ?? 2) : 2;
+                    return { ...acc, [s.name]: { p: defaultP, r: 0 } };
+                }, {});
 
-            await firebase.firestore().collection('operators').add({
-                name: formData.nome,
-                role: formData.cargo,
-                email: formData.email,
-                shift: formData.turno,
-                schedule: formData.escala,
-                status: formData.status,
-                departamento: formData.departamento,
-                skills: skillsMap,
-                uid: user.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+                await firebase.firestore().collection('operators').add({
+                    name: formData.nome,
+                    role: formData.cargo,
+                    email: formData.email,
+                    shift: formData.turno,
+                    schedule: formData.escala,
+                    status: formData.status,
+                    departamento: formData.departamento,
+                    skills: skillsMap,
+                    uid: user.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
 
             setShowAddModal(false);
+            setEditingId(null);
             setFormData({
                 nome: '',
                 cargo: 'Operador I',
@@ -122,11 +137,25 @@ const CollaboratorsPage: React.FC = () => {
                 departamento: 'Produção'
             });
         } catch (error) {
-            console.error("Erro ao cadastrar:", error);
+            console.error("Erro ao salvar:", error);
             alert("Erro ao salvar colaborador.");
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleEditClick = (colab: Operator) => {
+        setFormData({
+            nome: colab.name,
+            cargo: colab.role,
+            email: colab.email || '',
+            turno: colab.shift || 'Turno A',
+            escala: colab.schedule || '6x1',
+            status: colab.status || 'ativo',
+            departamento: colab.departamento || 'Produção'
+        });
+        setEditingId(colab.id);
+        setShowAddModal(true);
     };
 
     const handleDelete = async (id: string) => {
@@ -138,12 +167,12 @@ const CollaboratorsPage: React.FC = () => {
     // --- LÓGICA DE FILTRAGEM ---
     const filteredData = useMemo(() => {
         return operators.filter(colab => {
-            const matchesSearch = colab.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                colab.role.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesSearch = colab.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                colab.role.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesStatus = statusFilter === 'todos' || colab.status === statusFilter;
             // Fix: Using a fallback 'Geral' for departamento to match the departamentos list and ensure filtering works correctly for operators without a department set.
             const matchesDept = deptFilter === 'todos' || (colab.departamento || 'Geral') === deptFilter;
-            
+
             return matchesSearch && matchesStatus && matchesDept;
         });
     }, [operators, searchTerm, statusFilter, deptFilter]);
@@ -196,15 +225,19 @@ const CollaboratorsPage: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade">
-            
+
             {/* 1. HEADER E AÇÕES PRINCIPAIS */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                 <div>
                     <h1 className="text-3xl font-black text-slate-100 tracking-tighter uppercase leading-none">Gestão de Colaboradores</h1>
                     <p className="text-slate-400 text-sm font-medium mt-2 uppercase tracking-widest text-[10px]">Controle de ativos e disponibilidade de time</p>
                 </div>
-                <button 
-                    onClick={() => setShowAddModal(true)}
+                <button
+                    onClick={() => {
+                        setEditingId(null);
+                        setFormData({ nome: '', cargo: 'Operador I', email: '', turno: 'Turno A', escala: '6x1', status: 'ativo', departamento: 'Produção' });
+                        setShowAddModal(true);
+                    }}
                     className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95"
                 >
                     <UserPlus size={18} /> Novo Colaborador
@@ -216,7 +249,7 @@ const CollaboratorsPage: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <div className="relative flex-1 group">
                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
-                        <input 
+                        <input
                             type="text"
                             placeholder="Buscar por nome ou cargo..."
                             className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-[1.5rem] outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all font-bold text-slate-700 shadow-sm"
@@ -224,7 +257,7 @@ const CollaboratorsPage: React.FC = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <button 
+                    <button
                         onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
                         className={`p-4 rounded-[1.5rem] border transition-all flex items-center gap-2 font-black uppercase text-[10px] tracking-widest ${isFilterPanelOpen ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
                     >
@@ -240,7 +273,7 @@ const CollaboratorsPage: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-slate-50 rounded-[2rem] border border-slate-200 animate-fade">
                         <div className="space-y-2">
                             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Status</label>
-                            <select 
+                            <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                                 className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
@@ -253,7 +286,7 @@ const CollaboratorsPage: React.FC = () => {
                         </div>
                         <div className="space-y-2">
                             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Filtrar por Departamento</label>
-                            <select 
+                            <select
                                 value={deptFilter}
                                 onChange={(e) => setDeptFilter(e.target.value)}
                                 className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
@@ -264,7 +297,7 @@ const CollaboratorsPage: React.FC = () => {
                             </select>
                         </div>
                         <div className="flex items-end">
-                            <button 
+                            <button
                                 onClick={() => { setStatusFilter('todos'); setDeptFilter('todos'); setSearchTerm(''); }}
                                 className="w-full p-3 text-[9px] font-black text-slate-400 uppercase hover:text-red-500 transition-colors flex items-center justify-center gap-2"
                             >
@@ -331,9 +364,17 @@ const CollaboratorsPage: React.FC = () => {
                                     </td>
                                     <td className="px-8 py-5 text-right">
                                         <div className="flex justify-end gap-2">
-                                            <button 
+                                            <button
+                                                onClick={() => handleEditClick(colab)}
+                                                className="p-3 rounded-xl text-slate-300 hover:text-blue-500 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all"
+                                                title="Editar"
+                                            >
+                                                <Pencil size={16} />
+                                            </button>
+                                            <button
                                                 onClick={() => handleDelete(colab.id)}
                                                 className="p-3 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
+                                                title="Excluir"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -366,40 +407,40 @@ const CollaboratorsPage: React.FC = () => {
                                     <UserPlus size={20} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Novo Colaborador</h3>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Preencha o perfil completo</p>
+                                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">{editingId ? 'Editar Colaborador' : 'Novo Colaborador'}</h3>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{editingId ? 'Atualize as informações' : 'Preencha o perfil completo'}</p>
                                 </div>
                             </div>
-                            <button onClick={() => setShowAddModal(false)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><X size={24} /></button>
+                            <button onClick={() => { setShowAddModal(false); setEditingId(null); }} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><X size={24} /></button>
                         </div>
 
-                        <form onSubmit={handleAddOperator} className="p-8 overflow-y-auto custom-scrollbar space-y-6">
+                        <form onSubmit={handleSaveOperator} className="p-8 overflow-y-auto custom-scrollbar space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label>
-                                    <input required placeholder="Ex: Alessandro Silva" className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} />
+                                    <input required placeholder="Ex: Alessandro Silva" className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} />
                                 </div>
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cargo / Função</label>
-                                    <select className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.cargo} onChange={e => setFormData({...formData, cargo: e.target.value})}>
+                                    <select className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.cargo} onChange={e => setFormData({ ...formData, cargo: e.target.value })}>
                                         {ROLE_OPTIONS.map(role => <option key={role} value={role}>{role}</option>)}
                                     </select>
                                 </div>
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-mail Corporativo</label>
-                                    <input type="email" placeholder="nome@empresa.com" className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                                    <input type="email" placeholder="nome@empresa.com" className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                                 </div>
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Departamento</label>
-                                    <input placeholder="Ex: Usinagem" className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.departamento} onChange={e => setFormData({...formData, departamento: e.target.value})} />
+                                    <input placeholder="Ex: Usinagem" className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.departamento} onChange={e => setFormData({ ...formData, departamento: e.target.value })} />
                                 </div>
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Turno</label>
-                                    <select className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.turno} onChange={e => setFormData({...formData, turno: e.target.value})}>
+                                    <select className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.turno} onChange={e => setFormData({ ...formData, turno: e.target.value })}>
                                         <option value="Turno A">Turno A (06:00 - 14:00)</option>
                                         <option value="Turno B">Turno B (14:00 - 22:00)</option>
                                         <option value="Turno C">Turno C (22:00 - 06:00)</option>
@@ -409,7 +450,7 @@ const CollaboratorsPage: React.FC = () => {
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Escala</label>
-                                    <select className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.escala} onChange={e => setFormData({...formData, escala: e.target.value})}>
+                                    <select className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.escala} onChange={e => setFormData({ ...formData, escala: e.target.value })}>
                                         <option value="6x1">6x1</option>
                                         <option value="5x2">5x2</option>
                                         <option value="12x36">12x36</option>
@@ -428,7 +469,7 @@ const CollaboratorsPage: React.FC = () => {
                                             <button
                                                 key={s.id}
                                                 type="button"
-                                                onClick={() => setFormData({...formData, status: s.id as any})}
+                                                onClick={() => setFormData({ ...formData, status: s.id as any })}
                                                 className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${formData.status === s.id ? 'border-blue-500 bg-blue-50/50 shadow-md' : 'border-slate-100 bg-white hover:border-slate-200'}`}
                                             >
                                                 <div className={`p-2 rounded-lg ${s.bg} ${s.color} mb-2`}>
@@ -441,8 +482,8 @@ const CollaboratorsPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 disabled={isSaving}
                                 className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
