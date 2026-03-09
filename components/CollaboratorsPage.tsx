@@ -440,22 +440,12 @@ const CollaboratorsPage: React.FC = () => {
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Turno</label>
-                                    <select className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.turno} onChange={e => setFormData({ ...formData, turno: e.target.value })}>
-                                        <option value="Turno A">Turno A (06:00 - 14:00)</option>
-                                        <option value="Turno B">Turno B (14:00 - 22:00)</option>
-                                        <option value="Turno C">Turno C (22:00 - 06:00)</option>
-                                        <option value="ADM">Administrativo</option>
-                                    </select>
+                                    <input placeholder="Ex: Turno A (06:00 - 14:00)" className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.turno} onChange={e => setFormData({ ...formData, turno: e.target.value })} />
                                 </div>
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Escala</label>
-                                    <select className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.escala} onChange={e => setFormData({ ...formData, escala: e.target.value })}>
-                                        <option value="6x1">6x1</option>
-                                        <option value="5x2">5x2</option>
-                                        <option value="12x36">12x36</option>
-                                        <option value="Flexível">Flexível</option>
-                                    </select>
+                                    <input placeholder="Ex: 6x1" className="w-full px-5 py-3 rounded-2xl border bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.escala} onChange={e => setFormData({ ...formData, escala: e.target.value })} />
                                 </div>
 
                                 <div className="space-y-2 md:col-span-2">
