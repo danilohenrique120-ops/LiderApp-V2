@@ -78,7 +78,14 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
             if (activePdi) {
                 const totalGoals = activePdi.goals?.length || 0;
                 const completedGoals = activePdi.goals?.filter(g => g.completed).length || 0;
-                const pendingGoals = activePdi.goals?.filter(g => !g.completed).map(g => g.text).join('; ') || 'Nenhuma';
+
+                const todayStr = new Date().toISOString().split('T')[0];
+                const pendingGoalsList = activePdi.goals?.filter(g => !g.completed) || [];
+                const pendingGoals = pendingGoalsList.map(g => {
+                    const isDelayed = g.deadline && g.deadline < todayStr;
+                    return `${g.text} (Prazo: ${g.deadline || 'N/A'}${isDelayed ? ' - ATRASADA!' : ''})`;
+                }).join('; ') || 'Nenhuma';
+
                 pdiContext = `Objetivo: ${activePdi.careerObjective || 'Não definido'}. Metas: ${completedGoals}/${totalGoals} concluídas. Pendentes: ${pendingGoals}`;
             }
 
