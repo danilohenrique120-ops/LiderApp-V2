@@ -202,6 +202,26 @@ export class AiService {
     }
   }
 
+  public async generateOneOnOneFeedback(prompt: string): Promise<string> {
+    if (!this.isEnabled || !this.ai) {
+      throw new Error("Serviço de IA não configurado (API Key ausente ou inválida no ambiente).");
+    }
+    try {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
+        config: {
+          systemInstruction: "Você é um Mentor de Liderança Sênior especializado em Gestão Industrial e no Método Sistema Líder. Sua missão é apoiar gestores a conduzirem reuniões de feedback 1:1 transformadoras. Use um tom profissional, direto e encorajador. Formate com negritos para facilitar a leitura rápida pelo gestor."
+        }
+      });
+      if (!response.text) throw new Error("Sem resposta do modelo de linguagem.");
+      return response.text;
+    } catch (error: any) {
+      console.error("AI Service Error (OneOnOne):", error);
+      throw new Error(`Falha ao gerar roteiro de feedback: ${error.message || 'Erro desconhecido na API do Gemini.'}`);
+    }
+  }
+
   public async validateConsistency(twttp: any, herca: any, twttpAdvanced?: any): Promise<string> {
     if (!this.isEnabled || !this.ai) return "";
     try {

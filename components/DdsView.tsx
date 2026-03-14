@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Sparkles, Download, ArrowLeft, Target, Info, CheckCircle2, Quote, Zap, BookOpen, ShieldCheck
+import {
+    Sparkles, Download, ArrowLeft, Target, Info, CheckCircle2, Quote, Zap, BookOpen, ShieldCheck
 } from 'lucide-react';
 import { AiService } from '../services/AiService';
 import { HumanErrorInvestigation, DdsResponse } from '../types';
@@ -15,23 +15,23 @@ interface DdsViewProps {
 const DdsView: React.FC<DdsViewProps> = ({ investigations }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [ddsData, setDdsData] = useState<DdsResponse | null>(null);
-    const [lastDds, setLastDds] = useState<{title: string, createdAt: Date, topic: string} | null>(null);
-    
+    const [lastDds, setLastDds] = useState<{ title: string, createdAt: Date, topic: string } | null>(null);
+
     const [config, setConfig] = useState<DDSConfig>({
-      source: 'database_errors',
-      selectedTopic: 'epi',
-      durationMinutes: 5,
-      tone: 'casual'
+        source: 'database_errors',
+        selectedTopic: 'epi',
+        durationMinutes: 5,
+        tone: 'casual'
     });
 
     const aiService = AiService.getInstance();
 
     useEffect(() => {
-      const saved = localStorage.getItem('last_dds_metadata');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setLastDds({ ...parsed, createdAt: new Date(parsed.createdAt) });
-      }
+        const saved = localStorage.getItem('last_dds_metadata');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            setLastDds({ ...parsed, createdAt: new Date(parsed.createdAt) });
+        }
     }, []);
 
     const handleGenerateDds = async () => {
@@ -46,25 +46,26 @@ const DdsView: React.FC<DdsViewProps> = ({ investigations }) => {
             }
 
             const prompt = `Gere roteiro DDS. Contexto: ${contextPrompt}. Use [[PLACEHOLDERS]] para dados variáveis.`;
-            
-            const result = await aiService.generateDds(prompt, { 
-                duration: config.durationMinutes, 
-                tone: config.tone 
+
+            const result = await aiService.generateDds(prompt, {
+                duration: config.durationMinutes,
+                tone: config.tone
             });
 
             setDdsData(result);
-            
-            const metadata = { 
-                title: result.titulo_dds, 
-                createdAt: new Date(), 
-                topic: config.source === 'database_errors' ? 'Análise de Desvios' : config.selectedTopic 
+
+            const metadata = {
+                title: result.titulo_dds,
+                createdAt: new Date(),
+                topic: config.source === 'database_errors' ? 'Análise de Desvios' : config.selectedTopic
             };
             setLastDds(metadata);
             localStorage.setItem('last_dds_metadata', JSON.stringify(metadata));
             localStorage.setItem('last_dds_full', JSON.stringify(result));
 
-        } catch (error) {
-            alert("Erro ao conectar com o especialista de IA.");
+        } catch (error: any) {
+            console.error("Erro ao gerar DDS:", error);
+            alert(`Erro ao conectar com o especialista de IA:\n${error.message || 'Falha desconhecida.'}`);
         } finally {
             setIsGenerating(false);
         }
@@ -83,29 +84,29 @@ const DdsView: React.FC<DdsViewProps> = ({ investigations }) => {
     };
 
     const renderContent = (text: string) => {
-      return text.split(/(\[\[.*?\]\])/g).map((part, i) => (
-        part.startsWith('[[') ? <span key={i} className="bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded-md border border-amber-200 font-black">{part}</span> : part
-      ));
+        return text.split(/(\[\[.*?\]\])/g).map((part, i) => (
+            part.startsWith('[[') ? <span key={i} className="bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded-md border border-amber-200 font-black">{part}</span> : part
+        ));
     };
 
     return (
         <div className="animate-fade max-w-7xl mx-auto pb-32">
             {!ddsData ? (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                <div className="lg:col-span-4 space-y-6">
-                  <header className="mb-8">
-                    <h2 className="text-4xl font-black text-slate-100 tracking-tighter uppercase leading-none">DDS Inteligente</h2>
-                    <p className="text-slate-400 font-medium text-[10px] mt-3 uppercase tracking-widest">portal de diálogo diário de segurança</p>
-                  </header>
-                  <LastDDSPreview lastDds={lastDds} onViewDetails={() => {
-                      const saved = localStorage.getItem('last_dds_full');
-                      if (saved) setDdsData(JSON.parse(saved));
-                  }} />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div className="lg:col-span-4 space-y-6">
+                        <header className="mb-8">
+                            <h2 className="text-4xl font-black text-slate-100 tracking-tighter uppercase leading-none">DDS Inteligente</h2>
+                            <p className="text-slate-400 font-medium text-[10px] mt-3 uppercase tracking-widest">portal de diálogo diário de segurança</p>
+                        </header>
+                        <LastDDSPreview lastDds={lastDds} onViewDetails={() => {
+                            const saved = localStorage.getItem('last_dds_full');
+                            if (saved) setDdsData(JSON.parse(saved));
+                        }} />
+                    </div>
+                    <div className="lg:col-span-8">
+                        <DDSConfigForm config={config} setConfig={setConfig} onGenerate={handleGenerateDds} isGenerating={isGenerating} />
+                    </div>
                 </div>
-                <div className="lg:col-span-8">
-                  <DDSConfigForm config={config} setConfig={setConfig} onGenerate={handleGenerateDds} isGenerating={isGenerating} />
-                </div>
-              </div>
             ) : (
                 <div className="space-y-8 animate-fade max-w-4xl mx-auto">
                     <div className="flex justify-between items-center gap-4">
@@ -124,8 +125,8 @@ const DdsView: React.FC<DdsViewProps> = ({ investigations }) => {
 
                     <div id="dds-printable-content" className="bg-white rounded-[3.5rem] border border-slate-200 shadow-2xl p-10 md:p-20 relative overflow-hidden">
                         <div className="absolute top-10 right-10 opacity-10 flex items-center gap-2">
-                           <ShieldCheck size={40} />
-                           <span className="text-[10px] font-black uppercase">Sistema Líder</span>
+                            <ShieldCheck size={40} />
+                            <span className="text-[10px] font-black uppercase">Sistema Líder</span>
                         </div>
                         <div className="border-b-4 border-slate-900 pb-10 mb-12">
                             <div className="text-blue-600 font-black text-[10px] uppercase tracking-[0.3em] mb-4 flex items-center gap-2">

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { MessageSquare, Trash2, Calendar, Download, Sparkles, Loader2, Info, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { Meeting, Operator, HumanErrorInvestigation } from '../types';
-import { GoogleGenAI } from "@google/genai";
+import { AiService } from '../services/AiService';
 
 interface OneOnOneViewProps {
     meetings: Meeting[];
@@ -18,6 +18,8 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
     const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [expandedCard, setExpandedCard] = useState<string | null>(null);
+
+    const aiService = AiService.getInstance();
 
     const exportToPDF = (elementId: string, filename: string) => {
         const element = document.getElementById(elementId);
@@ -65,8 +67,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
             const errorCount = investigations.length;
             const latestActionPlan = investigations[0]?.actionPlan;
 
-            // 3. Chamar Gemini API
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            // 3. Chamar AiService
             const prompt = `
                 Gere um roteiro de feedback para o colaborador:
                 - Nome: ${formData.employee}
@@ -77,18 +78,11 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                 Siga a estrutura: 1. Quebra-gelo, 2. Ponto de Atenção (Fatos), 3. Plano de Ação, 4. Fechamento Motivacional.
             `;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: prompt,
-                config: {
-                    systemInstruction: "Você é um Mentor de Liderança Sênior especializado em Gestão Industrial e no Método Sistema Líder. Sua missão é apoiar gestores a conduzirem reuniões de feedback 1:1 transformadoras. Use um tom profissional, direto e encorajador. Formate com negritos para facilitar a leitura rápida pelo gestor.",
-                }
-            });
-
-            setAiSuggestion(response.text);
-        } catch (error) {
+            const suggestion = await aiService.generateOneOnOneFeedback(prompt);
+            setAiSuggestion(suggestion);
+        } catch (error: any) {
             console.error("Erro ao gerar feedback com IA:", error);
-            alert("Não foi possível gerar a sugestão no momento.");
+            alert(`Não foi possível gerar a sugestão no momento:\n${error.message || 'Verifique o console para mais detalhes.'}`);
         } finally {
             setIsGenerating(false);
         }
