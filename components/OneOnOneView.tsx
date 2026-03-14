@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { MessageSquare, Trash2, Calendar, Download, Sparkles, Loader2, Info, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
-import { Meeting, Operator, HumanErrorInvestigation } from '../types';
+import { Meeting, Operator, HumanErrorInvestigation, PDI } from '../types';
 import { AiService } from '../services/AiService';
 
 interface OneOnOneViewProps {
@@ -56,8 +56,14 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                 .where('occurrence.employee.name', '==', formData.employee)
                 .get();
 
+            const pdisSnap = await db.collection('pdis')
+                .where('uid', '==', user.uid)
+                .where('employee', '==', formData.employee)
+                .get();
+
             const operator = opsSnap.docs[0]?.data() as Operator;
-            const investigations = errsSnap.docs.map(d => d.data() as HumanErrorInvestigation);
+            const investigations = errsSnap.docs.map((d: any) => d.data() as HumanErrorInvestigation);
+            const pdis = pdisSnap.docs.map((d: any) => d.data() as PDI);
 
             // 2. Processar indicadores
             const gaps = operator ? Object.entries(operator.skills)
@@ -67,6 +73,15 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
             const errorCount = investigations.length;
             const latestActionPlan = investigations[0]?.actionPlan;
 
+            const activePdi = pdis.find(p => p.status !== 'Concluído') || pdis[0];
+            let pdiContext = "Nenhum PDI/Metas cadastradas para este colaborador.";
+            if (activePdi) {
+                const totalGoals = activePdi.goals?.length || 0;
+                const completedGoals = activePdi.goals?.filter(g => g.completed).length || 0;
+                const pendingGoals = activePdi.goals?.filter(g => !g.completed).map(g => g.text).join('; ') || 'Nenhuma';
+                pdiContext = `Objetivo: ${activePdi.careerObjective || 'Não definido'}. Metas: ${completedGoals}/${totalGoals} concluídas. Pendentes: ${pendingGoals}`;
+            }
+
             // 3. Chamar AiService
             const prompt = `
                 Gere um roteiro de feedback para o colaborador:
@@ -74,8 +89,9 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                 - Desvios Operacionais (mês): ${errorCount}
                 - Gaps de Skill detectados: ${gaps.join(', ') || 'Nenhum gap crítico'}
                 - Último Plano de Ação: ${latestActionPlan?.action || 'Nenhum pendente'}
+                - PDI e Metas: ${pdiContext}
                 
-                Siga a estrutura: 1. Quebra-gelo, 2. Ponto de Atenção (Fatos), 3. Plano de Ação, 4. Fechamento Motivacional.
+                Siga a estrutura: 1. Quebra-gelo, 2. Ponto de Atenção (Fatos, incluindo andamento das metas do PDI), 3. Plano de Ação, 4. Fechamento Motivacional.
             `;
 
             const suggestion = await aiService.generateOneOnOneFeedback(prompt);
