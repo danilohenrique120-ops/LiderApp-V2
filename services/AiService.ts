@@ -183,16 +183,22 @@ export class AiService {
   }
 
   public async refineOccurrence(description: string): Promise<string> {
-    if (!this.isEnabled || !this.ai) return description;
+    if (!this.isEnabled || !this.ai) {
+      throw new Error("Serviço de IA não configurado (API Key ausente ou inválida no ambiente).");
+    }
     try {
       const response = await this.ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: `Refine e profissionalize a descrição desta ocorrência industrial: "${description}".`,
         config: { systemInstruction: "Você é um Engenheiro de Processos Sênior. Transforme relatos informais em registros profissionais." }
       });
-      return response.text || description;
-    } catch (error) {
-      return description;
+      if (!response.text) {
+        throw new Error("Sem resposta do modelo de linguagem.");
+      }
+      return response.text;
+    } catch (error: any) {
+      console.error("AI Service Error (Refine):", error);
+      throw new Error(`Falha ao refinar descrição: ${error.message || 'Erro desconhecido na API do Gemini.'}`);
     }
   }
 

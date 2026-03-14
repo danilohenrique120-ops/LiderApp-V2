@@ -1,12 +1,12 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-    ShieldAlert, 
-    PlusCircle, 
-    ChevronRight, 
-    Save, 
-    Trash2, 
-    Calendar, 
+import {
+    ShieldAlert,
+    PlusCircle,
+    ChevronRight,
+    Save,
+    Trash2,
+    Calendar,
     ClipboardList,
     HelpCircle,
     XCircle,
@@ -38,11 +38,11 @@ interface HumanErrorViewProps {
 
 const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, db }) => {
     const [showForm, setShowForm] = useState(false);
-    const [step, setStep] = useState(1); 
-    const [history, setHistory] = useState<number[]>([]); 
+    const [step, setStep] = useState(1);
+    const [history, setHistory] = useState<number[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-    
+
     // Estados de IA
     const [isRefining, setIsRefining] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
@@ -104,7 +104,7 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
     // PONTO 4: DETECÇÃO DE RECORRÊNCIA
     useEffect(() => {
         if (occurrence.employee.name.length > 3) {
-            const matches = investigations.filter(inv => 
+            const matches = investigations.filter(inv =>
                 inv.occurrence.employee.name.toLowerCase().includes(occurrence.employee.name.toLowerCase()) &&
                 inv.id !== editingId
             );
@@ -123,6 +123,9 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
         try {
             const refined = await aiService.refineOccurrence(occurrence.description);
             setOccurrence(prev => ({ ...prev, description: refined }));
+        } catch (error: any) {
+            console.error("Erro ao refinar descrição:", error);
+            alert(`Falha ao refinar descrição com IA:\n${error.message || 'Verifique o console para mais detalhes.'}`);
         } finally {
             setIsRefining(false);
         }
@@ -133,8 +136,8 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
         setIsValidating(true);
         try {
             const feedback = await aiService.validateConsistency(
-                twttp, 
-                !needsAdvanced ? herca : null, 
+                twttp,
+                !needsAdvanced ? herca : null,
                 needsAdvanced ? twttpAdvanced : null
             );
             setAiFeedback(feedback);
@@ -170,11 +173,11 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
         setHistory([...history, step]);
         if (step === 1) setStep(2);
         else if (step === 2) {
-            if (needsAdvanced) setStep(3); 
-            else setStep(4); 
+            if (needsAdvanced) setStep(3);
+            else setStep(4);
         }
         else if (step === 3 || step === 4) handleNextToPlan();
-        else if (step === 5) setStep(6); 
+        else if (step === 5) setStep(6);
     };
 
     const handleBackStep = () => {
@@ -258,8 +261,8 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                     <p className="text-slate-400 font-medium text-[10px] uppercase tracking-widest mt-1">Investigação técnica Método Sistema Líder.</p>
                 </div>
                 {!showForm && (
-                    <button 
-                        onClick={() => { resetForm(); setShowForm(true); }} 
+                    <button
+                        onClick={() => { resetForm(); setShowForm(true); }}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs shadow-xl shadow-blue-200/50 flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
                     >
                         <PlusCircle size={18} /> Novo Registro
@@ -283,22 +286,26 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                     <div className="max-h-[65vh] overflow-y-auto pr-2 custom-scrollbar">
                         {step === 1 && (
                             <div className="space-y-6 animate-fade">
-                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><ClipboardList size={18}/> Detalhes da Ocorrência</h3>
+                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><ClipboardList size={18} /> Detalhes da Ocorrência</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="md:col-span-2 relative">
                                         <label className="label-Invest text-slate-400">Descrição do Problema</label>
-                                        <textarea placeholder="O que aconteceu?" className="input-Invest pr-12 bg-slate-50" rows={3} value={occurrence.description} onChange={e => setOccurrence({...occurrence, description: e.target.value})} />
-                                        <button 
+                                        <textarea placeholder="O que aconteceu?" className="input-Invest pr-12 bg-slate-50" rows={3} value={occurrence.description} onChange={e => setOccurrence({ ...occurrence, description: e.target.value })} />
+                                        <button
                                             onClick={handleRefineDescription}
                                             disabled={isRefining || !occurrence.description}
-                                            className="absolute right-3 bottom-3 p-2 bg-slate-900 text-white rounded-lg hover:bg-blue-600 disabled:opacity-20 transition-all group"
+                                            className="absolute right-3 bottom-3 px-3 py-2 bg-slate-900 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-all group flex items-center gap-2 text-[10px] font-black uppercase shadow-md"
                                             title="Refinar com IA"
                                         >
-                                            {isRefining ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} className="group-hover:scale-110" />}
+                                            {isRefining ? (
+                                                <><Loader2 size={12} className="animate-spin" /> Refinando...</>
+                                            ) : (
+                                                <><Sparkles size={12} className="group-hover:scale-110" /> Refinar IA</>
+                                            )}
                                         </button>
                                     </div>
-                                    <div><label className="label-Invest text-slate-400">Unidade / Estação</label><input className="input-Invest bg-slate-50" value={occurrence.unit} onChange={e => setOccurrence({...occurrence, unit: e.target.value})} /></div>
-                                    <div><label className="label-Invest text-slate-400">Data/Hora</label><div className="flex gap-2"><input type="date" className="input-Invest flex-1 bg-slate-50" value={occurrence.date} onChange={e => setOccurrence({...occurrence, date: e.target.value})} /><input type="time" className="input-Invest w-32 bg-slate-50" value={occurrence.time} onChange={e => setOccurrence({...occurrence, time: e.target.value})} /></div></div>
+                                    <div><label className="label-Invest text-slate-400">Unidade / Estação</label><input className="input-Invest bg-slate-50" value={occurrence.unit} onChange={e => setOccurrence({ ...occurrence, unit: e.target.value })} /></div>
+                                    <div><label className="label-Invest text-slate-400">Data/Hora</label><div className="flex gap-2"><input type="date" className="input-Invest flex-1 bg-slate-50" value={occurrence.date} onChange={e => setOccurrence({ ...occurrence, date: e.target.value })} /><input type="time" className="input-Invest w-32 bg-slate-50" value={occurrence.time} onChange={e => setOccurrence({ ...occurrence, time: e.target.value })} /></div></div>
                                 </div>
 
                                 {recurrenceAlert && (
@@ -311,14 +318,14 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-6">
                                     <div className="space-y-4">
                                         <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Colaborador Envolvido</h4>
-                                        <input placeholder="Nome Completo" className="input-Invest bg-slate-50" value={occurrence.employee.name} onChange={e => setOccurrence({...occurrence, employee: {...occurrence.employee, name: e.target.value}})} />
-                                        <input placeholder="Função / Cargo" className="input-Invest bg-slate-50" value={occurrence.employee.function} onChange={e => setOccurrence({...occurrence, employee: {...occurrence.employee, function: e.target.value}})} />
-                                        <input placeholder="Área" className="input-Invest bg-slate-50" value={occurrence.employee.area} onChange={e => setOccurrence({...occurrence, employee: {...occurrence.employee, area: e.target.value}})} />
+                                        <input placeholder="Nome Completo" className="input-Invest bg-slate-50" value={occurrence.employee.name} onChange={e => setOccurrence({ ...occurrence, employee: { ...occurrence.employee, name: e.target.value } })} />
+                                        <input placeholder="Função / Cargo" className="input-Invest bg-slate-50" value={occurrence.employee.function} onChange={e => setOccurrence({ ...occurrence, employee: { ...occurrence.employee, function: e.target.value } })} />
+                                        <input placeholder="Área" className="input-Invest bg-slate-50" value={occurrence.employee.area} onChange={e => setOccurrence({ ...occurrence, employee: { ...occurrence.employee, area: e.target.value } })} />
                                     </div>
                                     <div className="space-y-4">
                                         <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Investigador (Líder)</h4>
-                                        <input placeholder="Nome" className="input-Invest bg-slate-50" value={occurrence.interviewee.name} onChange={e => setOccurrence({...occurrence, interviewee: {...occurrence.interviewee, name: e.target.value}})} />
-                                        <input placeholder="Área" className="input-Invest bg-slate-50" value={occurrence.interviewee.area} onChange={e => setOccurrence({...occurrence, interviewee: {...occurrence.interviewee, area: e.target.value}})} />
+                                        <input placeholder="Nome" className="input-Invest bg-slate-50" value={occurrence.interviewee.name} onChange={e => setOccurrence({ ...occurrence, interviewee: { ...occurrence.interviewee, name: e.target.value } })} />
+                                        <input placeholder="Área" className="input-Invest bg-slate-50" value={occurrence.interviewee.area} onChange={e => setOccurrence({ ...occurrence, interviewee: { ...occurrence.interviewee, area: e.target.value } })} />
                                     </div>
                                 </div>
                             </div>
@@ -326,14 +333,14 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
 
                         {step === 2 && (
                             <div className="space-y-6 animate-fade">
-                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><HelpCircle size={18}/> Entrevista TWTTP</h3>
+                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><HelpCircle size={18} /> Entrevista TWTTP</h3>
                                 <div className="space-y-4">
                                     {['1. Entende as atividades?', '2. Sabe trabalhar corretamente?', '3. Sabe que executou sem erros?', '4. O que faz se encontrar problema?'].map((q, i) => (
                                         <div key={i} className="p-6 bg-slate-50 rounded-[2rem] border flex flex-col md:flex-row justify-between items-center gap-4">
                                             <p className="font-bold text-slate-700 text-sm md:flex-1">{q}</p>
                                             <div className="flex gap-2">
                                                 {['possui conhecimento', 'falta conhecimento'].map(opt => (
-                                                    <button key={opt} onClick={() => setTwttp({...twttp, [(i+1).toString()]: opt as any})} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${twttp[(i+1).toString()] === opt ? 'bg-slate-900 text-white shadow-lg' : 'bg-white text-slate-400 border'}`}>{opt}</button>
+                                                    <button key={opt} onClick={() => setTwttp({ ...twttp, [(i + 1).toString()]: opt as any })} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${twttp[(i + 1).toString()] === opt ? 'bg-slate-900 text-white shadow-lg' : 'bg-white text-slate-400 border'}`}>{opt}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -344,14 +351,14 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
 
                         {step === 3 && (
                             <div className="space-y-6 animate-fade">
-                                <h3 className="text-sm font-black text-amber-500 uppercase tracking-widest flex items-center gap-2"><HelpCircle size={18}/> TWTTP AVANÇADA (Gap de Treinamento)</h3>
+                                <h3 className="text-sm font-black text-amber-500 uppercase tracking-widest flex items-center gap-2"><HelpCircle size={18} /> TWTTP AVANÇADA (Gap de Treinamento)</h3>
                                 <div className="space-y-4">
                                     {twttpAdvancedQuestions.map(item => (
                                         <div key={item.id} className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex flex-col md:flex-row justify-between items-center gap-4">
                                             <p className="font-bold text-amber-900 text-sm md:flex-1">{item.q}</p>
                                             <div className="flex gap-2">
                                                 {['sim', 'não'].map(opt => (
-                                                    <button key={opt} onClick={() => setTwttpAdvanced({...twttpAdvanced, [item.id]: opt as any})} className={`px-8 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${twttpAdvanced[item.id] === opt ? 'bg-amber-600 text-white shadow-lg' : 'bg-white text-amber-400 border border-amber-200'}`}>{opt}</button>
+                                                    <button key={opt} onClick={() => setTwttpAdvanced({ ...twttpAdvanced, [item.id]: opt as any })} className={`px-8 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${twttpAdvanced[item.id] === opt ? 'bg-amber-600 text-white shadow-lg' : 'bg-white text-amber-400 border border-amber-200'}`}>{opt}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -362,7 +369,7 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
 
                         {step === 4 && (
                             <div className="space-y-8 animate-fade pb-10">
-                                <h3 className="text-sm font-black text-blue-600 uppercase tracking-widest flex items-center gap-2"><ShieldAlert size={18}/> Fatores HERCA (Causas Contribuintes)</h3>
+                                <h3 className="text-sm font-black text-blue-600 uppercase tracking-widest flex items-center gap-2"><ShieldAlert size={18} /> Fatores HERCA (Causas Contribuintes)</h3>
                                 {Object.entries(hercaQuestions).map(([category, questions]) => (
                                     <div key={category} className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
                                         <h4 className="text-[10px] font-black text-blue-600 uppercase mb-4">{category.toUpperCase()}</h4>
@@ -372,7 +379,7 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                                                     <p className="text-xs font-bold text-slate-600 flex-1">{questionText}</p>
                                                     <div className="flex gap-2">
                                                         {['sim', 'não'].map(opt => (
-                                                            <button key={opt} onClick={() => setHerca({...herca, [category]: {...(herca as any)[category], [qId]: opt}})} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase ${(herca as any)[category][qId] === opt ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-400 border'}`}>{opt}</button>
+                                                            <button key={opt} onClick={() => setHerca({ ...herca, [category]: { ...(herca as any)[category], [qId]: opt } })} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase ${(herca as any)[category][qId] === opt ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-400 border'}`}>{opt}</button>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -385,8 +392,8 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
 
                         {step === 5 && (
                             <div className="space-y-6 animate-fade">
-                                <h3 className="text-sm font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2"><Save size={18}/> Plano de Ação & Contramedida</h3>
-                                
+                                <h3 className="text-sm font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2"><Save size={18} /> Plano de Ação & Contramedida</h3>
+
                                 {aiFeedback && (
                                     <div className="bg-blue-50 border border-blue-200 p-6 rounded-[2rem] flex flex-col gap-2">
                                         <div className="flex items-center gap-2 text-blue-600 font-black text-[10px] uppercase tracking-widest">
@@ -404,23 +411,23 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                                                 {isSuggesting ? <Loader2 size={10} className="animate-spin" /> : <Zap size={10} />} Sugerir Engenharia
                                             </button>
                                         </div>
-                                        <textarea placeholder="Explique o porquê..." className="input-Invest bg-slate-50" rows={2} value={actionPlan.rootCauses} onChange={e => setActionPlan({...actionPlan, rootCauses: e.target.value})} />
-                                        
+                                        <textarea placeholder="Explique o porquê..." className="input-Invest bg-slate-50" rows={2} value={actionPlan.rootCauses} onChange={e => setActionPlan({ ...actionPlan, rootCauses: e.target.value })} />
+
                                         {aiSuggestions.length > 0 && (
                                             <div className="mt-4 grid grid-cols-1 gap-2">
                                                 {aiSuggestions.map((s, i) => (
-                                                    <button key={i} onClick={() => setActionPlan({...actionPlan, action: s})} className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-left text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:border-blue-200 transition-all flex items-center gap-2">
+                                                    <button key={i} onClick={() => setActionPlan({ ...actionPlan, action: s })} className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-left text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:border-blue-200 transition-all flex items-center gap-2">
                                                         <PlusCircle size={12} className="text-blue-500" /> {s}
                                                     </button>
                                                 ))}
                                             </div>
                                         )}
                                     </div>
-                                    <div className="md:col-span-2"><label className="label-Invest text-slate-400">Ação Corretiva Imediata</label><textarea placeholder="O que será feito?" className="input-Invest bg-slate-50" rows={3} value={actionPlan.action} onChange={e => setActionPlan({...actionPlan, action: e.target.value})} /></div>
-                                    <div><label className="label-Invest text-slate-400">Responsável</label><input className="input-Invest bg-slate-50" value={actionPlan.responsible} onChange={e => setActionPlan({...actionPlan, responsible: e.target.value})} /></div>
+                                    <div className="md:col-span-2"><label className="label-Invest text-slate-400">Ação Corretiva Imediata</label><textarea placeholder="O que será feito?" className="input-Invest bg-slate-50" rows={3} value={actionPlan.action} onChange={e => setActionPlan({ ...actionPlan, action: e.target.value })} /></div>
+                                    <div><label className="label-Invest text-slate-400">Responsável</label><input className="input-Invest bg-slate-50" value={actionPlan.responsible} onChange={e => setActionPlan({ ...actionPlan, responsible: e.target.value })} /></div>
                                     <div>
                                         <label className="label-Invest text-slate-400">Contramedida Técnica</label>
-                                        <select className="input-Invest font-bold bg-slate-50" value={actionPlan.countermeasure} onChange={e => setActionPlan({...actionPlan, countermeasure: e.target.value})}>
+                                        <select className="input-Invest font-bold bg-slate-50" value={actionPlan.countermeasure} onChange={e => setActionPlan({ ...actionPlan, countermeasure: e.target.value })}>
                                             <option>Treinamento em sala</option>
                                             <option>Instrução de Trabalho (LUP)</option>
                                             <option>Mudança de Processo</option>
@@ -430,7 +437,7 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                                             <option value="Outros">Outros...</option>
                                         </select>
                                     </div>
-                                    <div><label className="label-Invest text-slate-400">Prazo Final</label><input type="date" className="input-Invest bg-slate-50" value={actionPlan.deadline} onChange={e => setActionPlan({...actionPlan, deadline: e.target.value})} /></div>
+                                    <div><label className="label-Invest text-slate-400">Prazo Final</label><input type="date" className="input-Invest bg-slate-50" value={actionPlan.deadline} onChange={e => setActionPlan({ ...actionPlan, deadline: e.target.value })} /></div>
                                 </div>
                             </div>
                         )}
@@ -438,7 +445,7 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                         {step === 6 && (
                             <div className="space-y-8 animate-fade pb-10">
                                 <div className="flex justify-between items-center">
-                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Eye size={18}/> Relatório Técnico Final</h3>
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><Eye size={18} /> Relatório Técnico Final</h3>
                                     <button onClick={handleGeneratePDF} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black uppercase text-[10px] flex items-center gap-2 shadow-lg"><Download size={14} /> Gerar PDF A4</button>
                                 </div>
                                 <div id="pdf-report-container" className="bg-white p-10 rounded-[2.5rem] border shadow-inner text-slate-900">
@@ -446,7 +453,7 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                                         <h1 className="text-3xl font-black mb-1 text-slate-900">RELATÓRIO DE INVESTIGAÇÃO</h1>
                                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Cockpit Sistema Líder • Gestão de Fator Humano</p>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-2 gap-8 mb-8">
                                         <div>
                                             <h2 className="text-[10px] font-black uppercase text-slate-400 mb-1">Colaborador</h2>
@@ -468,11 +475,11 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                         <div className="space-y-4">
                                             <div className="p-5 border rounded-[1.5rem] bg-white">
-                                                <h2 className="text-[10px] font-black uppercase text-slate-400 mb-3 flex items-center gap-1"><Brain size={14} className="text-blue-500"/> Causa Raiz</h2>
+                                                <h2 className="text-[10px] font-black uppercase text-slate-400 mb-3 flex items-center gap-1"><Brain size={14} className="text-blue-500" /> Causa Raiz</h2>
                                                 <p className="text-xs font-bold text-slate-800 leading-relaxed">{actionPlan.rootCauses}</p>
                                             </div>
                                             <div className="p-5 border rounded-[1.5rem] bg-white">
-                                                <h2 className="text-[10px] font-black uppercase text-slate-400 mb-3 flex items-center gap-1"><Zap size={14} className="text-amber-500"/> Plano de Ação</h2>
+                                                <h2 className="text-[10px] font-black uppercase text-slate-400 mb-3 flex items-center gap-1"><Zap size={14} className="text-amber-500" /> Plano de Ação</h2>
                                                 <p className="text-xs font-bold text-slate-800 leading-relaxed">{actionPlan.action}</p>
                                             </div>
                                         </div>
@@ -480,21 +487,21 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                                             <h2 className="text-[10px] font-black uppercase text-blue-600 mb-4">Contramedida & Prazo</h2>
                                             <div className="space-y-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center"><ShieldAlert size={16}/></div>
+                                                    <div className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center"><ShieldAlert size={16} /></div>
                                                     <div>
                                                         <p className="text-[9px] font-black text-slate-400 uppercase">Técnica</p>
                                                         <p className="text-xs font-bold text-slate-800">{actionPlan.countermeasure}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center"><Calendar size={16}/></div>
+                                                    <div className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center"><Calendar size={16} /></div>
                                                     <div>
                                                         <p className="text-[9px] font-black text-slate-400 uppercase">Deadline</p>
                                                         <p className="text-xs font-bold text-slate-800">{actionPlan.deadline}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center"><CheckCircle2 size={16}/></div>
+                                                    <div className="w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center"><CheckCircle2 size={16} /></div>
                                                     <div>
                                                         <p className="text-[9px] font-black text-slate-400 uppercase">Responsável</p>
                                                         <p className="text-xs font-bold text-slate-800">{actionPlan.responsible}</p>
@@ -503,7 +510,7 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="mt-12 pt-8 border-t border-slate-100 flex justify-between items-end">
                                         <div>
                                             <div className="w-48 h-px bg-slate-300 mb-2"></div>
@@ -545,8 +552,8 @@ const HumanErrorView: React.FC<HumanErrorViewProps> = ({ investigations, user, d
                                     <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{inv.occurrence.date}</span>
                                 </div>
                                 <div className="flex gap-1">
-                                    <button onClick={() => handleEdit(inv)} className="text-slate-300 hover:text-blue-500 p-1"><Pencil size={16}/></button>
-                                    <button onClick={() => db.collection('human_error_investigations').doc(inv.id).delete()} className="text-slate-300 hover:text-red-500 p-1"><Trash2 size={16}/></button>
+                                    <button onClick={() => handleEdit(inv)} className="text-slate-300 hover:text-blue-500 p-1"><Pencil size={16} /></button>
+                                    <button onClick={() => db.collection('human_error_investigations').doc(inv.id).delete()} className="text-slate-300 hover:text-red-500 p-1"><Trash2 size={16} /></button>
                                 </div>
                             </div>
                             <div className="flex justify-between text-[10px] font-bold"><span className="text-slate-400">Colaborador:</span><span className="text-slate-700">{inv.occurrence.employee.name}</span></div>
