@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { MessageSquare, Trash2, Calendar, Download, Sparkles, Loader2, Info, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
-import { Meeting, Operator, HumanErrorInvestigation, PDI } from '../types';
+import { MessageSquare, Trash2, Calendar, Download, Sparkles, Loader2, Info, Pencil, ChevronDown, ChevronUp, Search, CheckCircle2, Circle, Target, Smile, Meh, Frown, Plus } from 'lucide-react';
+import { Meeting, Operator, HumanErrorInvestigation, PDI, MeetingAction } from '../types';
 import { AiService } from '../services/AiService';
 
 interface OneOnOneViewProps {
@@ -13,11 +13,17 @@ interface OneOnOneViewProps {
 
 const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, db }) => {
     const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState<Partial<Meeting>>({ employee: '', date: '', summary: '', recognition: '', improvements: '', employeeActions: '', managerActions: '' });
+    const [formData, setFormData] = useState<Partial<Meeting>>({ employee: '', date: '', summary: '', recognition: '', improvements: '', employeeActions: '', managerActions: '', actionItems: [], sentiment: undefined });
     const [isGenerating, setIsGenerating] = useState(false);
     const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [expandedCard, setExpandedCard] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [monthFilter, setMonthFilter] = useState('all');
+    const [employeeFilter, setEmployeeFilter] = useState('all');
+    const [lastMeeting, setLastMeeting] = useState<Meeting | null>(null);
+    const [newActionText, setNewActionText] = useState('');
+    const [newActionOwner, setNewActionOwner] = useState<'Líder' | 'Liderado'>('Liderado');
 
     const aiService = AiService.getInstance();
 
@@ -139,10 +145,53 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
             });
         }
 
-        setFormData({ employee: '', date: '', summary: '', recognition: '', improvements: '', employeeActions: '', managerActions: '' });
+        setFormData({ employee: '', date: '', summary: '', recognition: '', improvements: '', employeeActions: '', managerActions: '', actionItems: [], sentiment: undefined });
         setAiSuggestion(null);
         setShowForm(false);
         setEditingId(null);
+        setLastMeeting(null);
+    };
+
+    const handleEmployeeSelect = (empName: string) => {
+        setFormData({ ...formData, employee: empName });
+        const empMeetings = meetings
+            .filter(m => m.employee === empName)
+            .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        if (empMeetings.length > 0) {
+            setLastMeeting(empMeetings[0]);
+        } else {
+            setLastMeeting(null);
+        }
+    };
+
+    const addActionItem = () => {
+        if (!newActionText.trim()) return;
+        const newItem: MeetingAction = {
+            id: Math.random().toString(36).substr(2, 9),
+            text: newActionText,
+            owner: newActionOwner,
+            completed: false
+        };
+        setFormData({ ...formData, actionItems: [...(formData.actionItems || []), newItem] });
+        setNewActionText('');
+    };
+
+    const removeActionItem = (id: string) => {
+        setFormData({ ...formData, actionItems: (formData.actionItems || []).filter(a => a.id !== id) });
+    };
+
+    const toggleActionCompletionInView = async (meetingId: string, actionId: string, currentStatus: boolean) => {
+        const meeting = meetings.find(m => m.id === meetingId);
+        if (!meeting || !meeting.actionItems) return;
+        
+        const updatedActions = meeting.actionItems.map(a => 
+            a.id === actionId ? { ...a, completed: !currentStatus } : a
+        );
+        
+        await db.collection('meetings').doc(meetingId).update({
+            actionItems: updatedActions,
+            updatedAt: new Date()
+        });
     };
 
     const openEdit = (meeting: Meeting) => {
@@ -153,9 +202,15 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
             recognition: meeting.recognition || '',
             improvements: meeting.improvements || '',
             employeeActions: meeting.employeeActions || '',
-            managerActions: meeting.managerActions || ''
+            managerActions: meeting.managerActions || '',
+            actionItems: meeting.actionItems || [],
+            sentiment: meeting.sentiment
         });
         setEditingId(meeting.id);
+        const empMeetings = meetings
+            .filter(m => m.employee === meeting.employee && m.id !== meeting.id)
+            .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setLastMeeting(empMeetings.length > 0 ? empMeetings[0] : null);
         setShowForm(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -164,24 +219,117 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
         if (showForm) {
             setShowForm(false);
             setEditingId(null);
-            setFormData({ employee: '', date: '', summary: '', recognition: '', improvements: '', employeeActions: '', managerActions: '' });
+            setFormData({ employee: '', date: '', summary: '', recognition: '', improvements: '', employeeActions: '', managerActions: '', actionItems: [], sentiment: undefined });
+            setLastMeeting(null);
         } else {
             setShowForm(true);
         }
         setAiSuggestion(null);
     };
 
+    const currentMonthStr = new Date().toISOString().substring(0, 7); // YYYY-MM
+    const currentMonthMeetings = meetings.filter(m => m.date.startsWith(currentMonthStr));
+    const coveredEmployeesCount = new Set(currentMonthMeetings.map(m => m.employee)).size;
+    const teamCoverage = employees.length > 0 ? Math.round((coveredEmployeesCount / employees.length) * 100) : 0;
+    const totalPendingActions = meetings.reduce((acc, m) => acc + (m.actionItems?.filter(a => !a.completed).length || 0), 0);
+
+    const filteredMeetings = meetings.filter(m => {
+        const matchSearch = m.employee.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        let matchEmp = true;
+        if (employeeFilter !== 'all') {
+            matchEmp = m.employee === employeeFilter;
+        }
+
+        let matchMonth = true;
+        if (monthFilter === 'current') {
+            matchMonth = m.date.startsWith(currentMonthStr);
+        }
+        
+        return matchSearch && matchMonth && matchEmp;
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
     return (
         <div className="animate-fade">
             <header className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tight">Feedbacks 1:1</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => exportToPDF('meetings-list-content', 'Feedbacks-1-1-Geral')} className="bg-slate-200 text-slate-700 hover:bg-slate-300 px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-xs uppercase transition-colors">
+                    <button onClick={() => exportToPDF('meetings-list-content', 'Feedbacks-1-1-Geral')} className="bg-slate-200 text-slate-700 hover:bg-slate-300 px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-xs uppercase transition-colors shadow-sm">
                         <Download size={16} /> PDF Geral
                     </button>
-                    <button onClick={handleFormToggle} className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-xs shadow-lg">Nova Reunião</button>
+                    <button onClick={handleFormToggle} className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-xs shadow-lg hover:bg-blue-700 transition-colors">
+                        <Plus size={16} className="inline-block mr-1" /> Nova Reunião
+                    </button>
                 </div>
             </header>
+
+            {!showForm && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade">
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-4 group hover:shadow-md transition-all">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <MessageSquare size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Realizados no Mês</p>
+                            <h3 className="text-3xl font-black text-slate-800">{currentMonthMeetings.length}</h3>
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-4 group hover:shadow-md transition-all">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Target size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cobertura do Time ({currentMonthStr})</p>
+                            <div className="flex items-end gap-2">
+                                <h3 className="text-3xl font-black text-slate-800">{teamCoverage}%</h3>
+                                <span className="text-xs font-bold text-emerald-500 mb-1">{coveredEmployeesCount} de {employees.length}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-4 group hover:shadow-md transition-all">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <CheckCircle2 size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ações Pendentes</p>
+                            <h3 className="text-3xl font-black text-slate-800">{totalPendingActions}</h3>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {!showForm && (
+                <div className="flex flex-col md:flex-row gap-4 mb-8">
+                    <div className="flex-1 bg-white flex items-center px-4 rounded-2xl border border-slate-100 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 transition-all text-slate-600">
+                        <Search size={18} className="text-slate-400" />
+                        <input 
+                            type="text" 
+                            placeholder="Buscar colaboradores..." 
+                            className="w-full bg-transparent border-none outline-none px-3 py-4 text-sm font-medium"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                        <select 
+                            className="bg-white px-4 py-4 rounded-2xl border border-slate-100 shadow-sm outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold text-slate-600 cursor-pointer"
+                            value={employeeFilter}
+                            onChange={e => setEmployeeFilter(e.target.value)}
+                        >
+                            <option value="all">Todos os Colaboradores</option>
+                            {employees.map(e => <option key={e} value={e}>{e}</option>)}
+                        </select>
+                        <select 
+                            className="bg-white px-4 py-4 rounded-2xl border border-slate-100 shadow-sm outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold text-slate-600 cursor-pointer"
+                            value={monthFilter}
+                            onChange={e => setMonthFilter(e.target.value)}
+                        >
+                            <option value="all">Todo Histórico</option>
+                            <option value="current">Mês Atual</option>
+                        </select>
+                    </div>
+                </div>
+            )}
 
             {showForm && (
                 <div className="space-y-6 animate-fade mb-12">
@@ -200,12 +348,55 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <select required className="p-4 border rounded-2xl bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.employee} onChange={e => setFormData({ ...formData, employee: e.target.value })}>
+                            <select required className="p-4 border rounded-2xl bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500" value={formData.employee || ''} onChange={e => handleEmployeeSelect(e.target.value)}>
                                 <option value="">Colaborador...</option>
                                 {employees.map(e => <option key={e} value={e}>{e}</option>)}
                             </select>
-                            <input type="date" required className="p-4 border rounded-2xl bg-slate-50 font-medium outline-none focus:ring-2 focus:ring-blue-500" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+                            <input type="date" required className="p-4 border rounded-2xl bg-slate-50 font-medium outline-none focus:ring-2 focus:ring-blue-500" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
                         </div>
+                        
+                        <div className="flex flex-col gap-2 p-4 bg-slate-50 border rounded-2xl">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Sentimento do Colaborador nesta 1:1</label>
+                            <div className="flex gap-4">
+                                <button type="button" onClick={() => setFormData({ ...formData, sentiment: '😃' })} className={`p-3 rounded-xl flex items-center gap-2 transition-all ${formData.sentiment === '😃' ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-500 font-bold' : 'bg-white text-slate-400 hover:bg-slate-100'}`}>
+                                    <Smile size={20} /> Ótimo
+                                </button>
+                                <button type="button" onClick={() => setFormData({ ...formData, sentiment: '😐' })} className={`p-3 rounded-xl flex items-center gap-2 transition-all ${formData.sentiment === '😐' ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-500 font-bold' : 'bg-white text-slate-400 hover:bg-slate-100'}`}>
+                                    <Meh size={20} /> Neutro
+                                </button>
+                                <button type="button" onClick={() => setFormData({ ...formData, sentiment: '🙁' })} className={`p-3 rounded-xl flex items-center gap-2 transition-all ${formData.sentiment === '🙁' ? 'bg-red-100 text-red-700 ring-2 ring-red-500 font-bold' : 'bg-white text-slate-400 hover:bg-slate-100'}`}>
+                                    <Frown size={20} /> Preocupante
+                                </button>
+                            </div>
+                        </div>
+
+                        {lastMeeting && !editingId && (
+                            <div className="bg-amber-50 rounded-2xl p-6 border border-amber-100 animate-fade">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Info size={16} className="text-amber-500" />
+                                    <h4 className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Resgate da Última 1:1 ({lastMeeting.date})</h4>
+                                </div>
+                                <div className="space-y-3">
+                                    {lastMeeting.actionItems && lastMeeting.actionItems.length > 0 ? (
+                                        <div className="bg-white/60 p-3 rounded-xl">
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Ações Acordadas:</p>
+                                            <ul className="space-y-1">
+                                                {lastMeeting.actionItems.map(action => (
+                                                    <li key={action.id} className="text-xs text-slate-700 flex items-start gap-2">
+                                                        {action.completed ? <CheckCircle2 size={14} className="text-emerald-500 mt-0.5" /> : <Circle size={14} className="text-amber-500 mt-0.5" />}
+                                                        <span className={action.completed ? 'line-through opacity-70' : ''}>
+                                                            <strong className="text-slate-800">{action.owner}:</strong> {action.text}
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-slate-600 italic">Na última 1:1 não foram registradas ações no formato rastreável.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {aiSuggestion && (
                             <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 animate-fade relative group">
@@ -246,25 +437,54 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                     onChange={e => setFormData({ ...formData, improvements: e.target.value })}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Ações do Colaborador (Próximos Passos)</label>
-                                <textarea
-                                    rows={3}
-                                    className="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                    placeholder="O que o colaborador se compromete a fazer..."
-                                    value={formData.employeeActions || ''}
-                                    onChange={e => setFormData({ ...formData, employeeActions: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Ações do Gestor (Como vou ajudar)</label>
-                                <textarea
-                                    rows={3}
-                                    className="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                    placeholder="O que eu como líder farei para apoiar..."
-                                    value={formData.managerActions || ''}
-                                    onChange={e => setFormData({ ...formData, managerActions: e.target.value })}
-                                />
+                            <div className="md:col-span-2 space-y-4 bg-white p-6 rounded-2xl border">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Planos de Ação (Gestor e Liderado)</label>
+                                
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                    <select 
+                                        className="p-3 rounded-xl border bg-slate-50 text-xs font-bold w-full sm:w-1/4 outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={newActionOwner}
+                                        onChange={e => setNewActionOwner(e.target.value as any)}
+                                    >
+                                        <option value="Liderado">Liderado fará</option>
+                                        <option value="Líder">Líder fará</option>
+                                    </select>
+                                    <div className="flex flex-1 gap-2">
+                                        <input 
+                                            type="text"
+                                            className="w-full p-3 rounded-xl border bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"
+                                            placeholder="O que será feito..."
+                                            value={newActionText}
+                                            onChange={e => setNewActionText(e.target.value)}
+                                            onKeyDown={e => { if(e.key === 'Enter') { e.preventDefault(); addActionItem(); } }}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={addActionItem}
+                                            className="px-4 py-3 bg-blue-100 text-blue-700 rounded-xl font-bold hover:bg-blue-200 transition-colors"
+                                        >
+                                            <Plus size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {formData.actionItems && formData.actionItems.length > 0 && (
+                                    <ul className="space-y-2 mt-4">
+                                        {formData.actionItems.map(action => (
+                                            <li key={action.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100 group">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${action.owner === 'Líder' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                        {action.owner}
+                                                    </span>
+                                                    <span className="text-sm text-slate-700">{action.text}</span>
+                                                </div>
+                                                <button type="button" onClick={() => removeActionItem(action.id)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         </div>
 
@@ -290,13 +510,18 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
             )}
 
             <div id="meetings-list-content" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {meetings.map(m => {
+                {filteredMeetings.map(m => {
                     const isExpanded = expandedCard === m.id;
                     return (
                         <div key={m.id} id={`meeting-card-${m.id}`} className="bg-white p-6 border rounded-[2rem] shadow-sm flex flex-col justify-between group hover:shadow-md transition-all animate-fade">
                             <div className="mb-4">
                                 <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-black text-slate-800 text-lg">{m.employee}</h4>
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="font-black text-slate-800 text-lg">{m.employee}</h4>
+                                        {m.sentiment === '😃' && <span title="Ótimo" className="text-emerald-500"><Smile size={18} /></span>}
+                                        {m.sentiment === '😐' && <span title="Neutro" className="text-amber-500"><Meh size={18} /></span>}
+                                        {m.sentiment === '🙁' && <span title="Preocupante" className="text-red-500"><Frown size={18} /></span>}
+                                    </div>
                                     <div className="flex gap-1">
                                         <button onClick={() => openEdit(m)} className="text-slate-200 hover:text-blue-500 p-1 transition-colors" title="Editar Feedback">
                                             <Pencil size={16} />
@@ -336,15 +561,38 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                 <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl">{m.improvements}</p>
                                             </div>
                                         )}
+                                        {m.actionItems && m.actionItems.length > 0 && (
+                                            <div className="space-y-2 mt-4">
+                                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Planos de Ação</span>
+                                                <ul className="space-y-2">
+                                                    {m.actionItems.map(action => (
+                                                        <li key={action.id} className="flex items-start gap-2 bg-slate-50 p-2 rounded-xl group/action">
+                                                            <button 
+                                                                onClick={() => toggleActionCompletionInView(m.id, action.id, action.completed)}
+                                                                className={`mt-0.5 ${action.completed ? 'text-emerald-500' : 'text-slate-300 hover:text-amber-500'} transition-colors`}
+                                                            >
+                                                                {action.completed ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+                                                            </button>
+                                                            <div className="flex-1">
+                                                                <p className={`text-sm ${action.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                                                                    <strong className="text-[10px] uppercase font-bold text-slate-500 mr-1">{action.owner}:</strong>
+                                                                    {action.text}
+                                                                </p>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                         {m.employeeActions && (
                                             <div className="space-y-1">
-                                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Ações do Colaborador</span>
+                                                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Ações do Colaborador (Legado)</span>
                                                 <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl">{m.employeeActions}</p>
                                             </div>
                                         )}
                                         {m.managerActions && (
                                             <div className="space-y-1">
-                                                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Ações do Gestor</span>
+                                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Ações do Gestor (Legado)</span>
                                                 <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl">{m.managerActions}</p>
                                             </div>
                                         )}
@@ -360,7 +608,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                         </div>
                     );
                 })}
-                {meetings.length === 0 && (
+                {filteredMeetings.length === 0 && (
                     <div className="md:col-span-3">
                         <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[3rem] py-20 flex flex-col items-center text-center">
                             <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-300 mb-6">

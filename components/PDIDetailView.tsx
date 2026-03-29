@@ -1,25 +1,27 @@
-
 import React from 'react';
-import { PDI, Goal } from '../types';
-import { Check, Clock, Circle, Target, Download, PencilLine, Trash2 } from 'lucide-react';
+import { PDI, Goal, MainGoalGroup } from '../types';
+import { Check, Clock, Circle, Target, Download, PencilLine, Trash2, Undo2 } from 'lucide-react';
 import { isBefore, parseISO, startOfToday } from 'date-fns';
 
 interface PDIDetailViewProps {
   pdi: PDI;
   onEdit: (pdi: PDI) => void;
   onDelete: (id: string) => void;
-  onToggleGoal: (pdiId: string, goalId: string) => void;
+  onToggleGoal: (pdiId: string, goalId: string, mainGoalId?: string) => void;
   exportPdf: (id: string, name: string) => void;
 }
 
 const PDIDetailView: React.FC<PDIDetailViewProps> = ({ pdi, onEdit, onDelete, onToggleGoal, exportPdf }) => {
   const today = startOfToday();
-  const goals = pdi.goals || [];
-  const completedCount = goals.filter(g => g.completed).length;
-  const progress = goals.length > 0 ? Math.round((completedCount / goals.length) * 100) : 0;
+  
+  // Normalização para dados legados (que usavam careerObjective como única meta principal)
+  const normalizedMainGoals: MainGoalGroup[] = pdi.mainGoals?.length 
+    ? pdi.mainGoals 
+    : [{ id: 'legacy', title: pdi.careerObjective || 'Objetivo Principal', goals: pdi.goals || [] }];
 
-  // Identifica a meta atual (primeira não concluída)
-  const currentGoalIndex = goals.findIndex(g => !g.completed);
+  const allGoals = normalizedMainGoals.flatMap(mg => mg.goals || []);
+  const completedCount = allGoals.filter(g => g.completed).length;
+  const progress = allGoals.length > 0 ? Math.round((completedCount / allGoals.length) * 100) : 0;
 
   return (
     <div className="animate-fade space-y-8" id={`pdi-report-${pdi.id}`}>
@@ -42,104 +44,96 @@ const PDIDetailView: React.FC<PDIDetailViewProps> = ({ pdi, onEdit, onDelete, on
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
-            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-              <Target size={14} /> Objetivo Final
-            </p>
-            <p className="text-lg font-bold text-slate-800 leading-tight italic">"{pdi.careerObjective}"</p>
-          </div>
-          <div className="flex flex-col justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
+          <div className="flex flex-col justify-center bg-slate-50 p-6 rounded-3xl border border-slate-100">
             <div className="flex justify-between items-end mb-2 px-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conclusão da Jornada</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conclusão Global das Metas</span>
               <span className="text-xl font-black text-blue-600">{progress}%</span>
             </div>
-            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5">
+            <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden p-0.5">
               <div
                 className="h-full bg-blue-600 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(37,99,235,0.4)]"
                 style={{ width: `${progress}%` }}
               />
             </div>
-          </div>
-        </div>
-
-        {pdi.fixedResponsibilities && (
-          <div className="bg-slate-50 border border-slate-200 p-6 rounded-3xl mt-4">
-            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em] mb-2 flex items-center gap-2">
-              <Circle size={10} className="fill-slate-300 text-slate-300" />
-              Responsabilidades da Função Atual (O "Arroz com Feijão")
-            </h3>
-            <p className="text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
-              {pdi.fixedResponsibilities}
+            <p className="text-xs text-slate-400 font-bold mt-4 text-center">
+                {completedCount} de {allGoals.length} submetas concluídas
             </p>
           </div>
-        )}
+
+          {pdi.fixedResponsibilities && (
+            <div className="bg-amber-50 border border-amber-100 p-6 rounded-3xl">
+              <h3 className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <Circle size={10} className="fill-amber-400 text-amber-500" />
+                Responsabilidades da Função Atual
+              </h3>
+              <p className="text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
+                {pdi.fixedResponsibilities}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Timeline Visual (Jornada) */}
-      <div className="space-y-4">
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Milestones e Metas</h3>
+      {/* Blocos independentes de Metas Principais */}
+      <div className="space-y-6">
+        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Metas Principais e Submetas</h3>
 
-        <div className="space-y-0 ml-4 border-l-2 border-slate-100">
-          {goals.map((goal, index) => {
-            const isCompleted = goal.completed;
-            const isFocussed = index === currentGoalIndex;
-            const deadlineDate = parseISO(goal.deadline);
-            const isOverdue = !isCompleted && isBefore(deadlineDate, startOfToday());
+        {normalizedMainGoals.map((mainGoal, mgIdx) => (
+            <div key={mainGoal.id} className="bg-white border text-left border-slate-200 rounded-[2.5rem] p-8 shadow-sm group">
+               <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                 <Target size={18} className="text-blue-600" />
+                 {mainGoal.title}
+               </h4>
 
-            return (
-              <div key={goal.id} className="relative pl-10 pb-10 last:pb-0">
-                {/* Marcador flutuante na linha */}
-                <div className={`absolute left-[-11px] top-0 w-5 h-5 rounded-full border-4 ${isCompleted ? 'bg-emerald-500 border-emerald-100' :
-                    isFocussed ? 'bg-blue-600 border-blue-100 animate-pulse' :
-                      'bg-white border-slate-200'
-                  }`} />
+               <div className="space-y-3">
+                 {mainGoal.goals && mainGoal.goals.map((goal) => {
+                     const isCompleted = goal.completed;
+                     const deadlineDate = parseISO(goal.deadline);
+                     const isOverdue = !isCompleted && goal.deadline && isBefore(deadlineDate, today);
 
-                <div className={`p-6 rounded-[2rem] border transition-all ${isCompleted ? 'bg-emerald-50/20 border-emerald-100 opacity-70' :
-                    isFocussed ? 'bg-white border-blue-200 shadow-xl shadow-blue-50/50 scale-[1.02]' :
-                      'bg-white border-slate-100 opacity-50'
-                  }`}>
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isCompleted ? 'bg-emerald-100 text-emerald-700' :
-                            isOverdue ? 'bg-red-100 text-red-600' :
-                              isFocussed ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'
-                          }`}>
-                          {isCompleted ? 'Concluído' : isOverdue ? 'Atrasado' : isFocussed ? 'Foco Atual' : 'Planejado'}
-                        </span>
-                        {goal.category && (
-                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${goal.category.includes('70%') ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                              goal.category.includes('20%') ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                goal.category.includes('10%') ? 'bg-sky-50 text-sky-700 border-sky-200' :
-                                  'bg-slate-50 text-slate-600 border-slate-200'
-                            }`}>
-                            {goal.category.split(' ')[0]} {/* Mostrará apenas "70%", "20%" ou "10%" no badge para economizar espaço */}
-                          </span>
-                        )}
-                        <span className="text-[9px] font-bold text-slate-400 flex items-center gap-1">
-                          <Clock size={10} /> {goal.deadline}
-                        </span>
-                      </div>
-                      <h4 className={`text-sm font-black ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
-                        {goal.text}
-                      </h4>
-                    </div>
+                     return (
+                         <div key={goal.id} className={`flex items-start justify-between gap-4 p-4 rounded-xl border transition-all ${isCompleted ? 'bg-emerald-50/40 border-emerald-100/50' : 'bg-slate-50/50 border-slate-100 hover:border-blue-200 hover:shadow-md'}`}>
+                             <div className="flex-1 mt-1">
+                                <h5 className={`text-sm font-bold ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{goal.text}</h5>
+                                <div className="flex items-center gap-2 mt-2">
+                                  {isOverdue && <span className="text-[8px] px-2 py-0.5 rounded-full bg-red-100 font-black uppercase tracking-widest text-red-600">Atrasado</span>}
+                                  {isCompleted && <span className="text-[8px] px-2 py-0.5 rounded-full bg-emerald-100 font-black uppercase tracking-widest text-emerald-600">Concluído</span>}
+                                  {!isCompleted && !isOverdue && <span className="text-[8px] px-2 py-0.5 rounded-full bg-blue-100 font-black uppercase tracking-widest text-blue-600">Em Andamento</span>}
 
-                    {!isCompleted && (
-                      <button
-                        onClick={() => onToggleGoal(pdi.id, goal.id)}
-                        className="p-3 bg-slate-900 text-white rounded-xl hover:bg-emerald-500 transition-all shadow-md active:scale-90"
-                      >
-                        <Check size={16} strokeWidth={3} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                                  <span className="text-[9px] font-bold text-slate-400 flex items-center gap-1">
+                                    <Clock size={10} /> {goal.deadline}
+                                  </span>
+                                  {goal.category && (
+                                      <span className="text-[9px] font-black uppercase text-slate-400 border px-1.5 py-0.5 rounded opacity-70">
+                                          {goal.category.split(' ')[0]} {/* Apenas 70%, 20%, 10% */}
+                                      </span>
+                                  )}
+                                </div>
+                             </div>
+                             
+                             <button
+                               onClick={() => onToggleGoal(pdi.id, goal.id, mainGoal.id)}
+                               className={`p-3 rounded-xl transition-all shadow-sm active:scale-95 ${
+                                 isCompleted 
+                                   ? 'bg-white border text-slate-300 hover:bg-red-50 hover:text-red-500 hover:border-red-200' 
+                                   : 'bg-slate-900 border border-slate-900 text-white hover:bg-emerald-500 hover:border-emerald-500 hover:shadow-lg'
+                               }`}
+                               title={isCompleted ? "Desmarcar meta" : "Marcar meta como concluída"}
+                             >
+                               {isCompleted ? <Undo2 size={16} strokeWidth={3} /> : <Check size={16} strokeWidth={3} />}
+                             </button>
+                         </div>
+                     );
+                 })}
+                 {(!mainGoal.goals || mainGoal.goals.length === 0) && (
+                     <div className="p-4 bg-slate-50 border border-dashed rounded-xl text-center">
+                         <p className="text-xs text-slate-400 italic">Nenhuma submeta definida para esta Meta Principal.</p>
+                     </div>
+                 )}
+               </div>
+            </div>
+        ))}
       </div>
     </div>
   );

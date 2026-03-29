@@ -45,16 +45,30 @@ export interface Goal {
   category?: '70% (Prática/Experiência)' | '20% (Mentoria/Exposição)' | '10% (Cursos/Educação)' | string;
 }
 
+export interface MainGoalGroup {
+  id: string;
+  title: string;
+  goals: Goal[];
+}
+
 export interface PDI {
   id: string;
   employee: string;
-  careerObjective: string;
-  goals: Goal[];
+  careerObjective: string; // Legado (antes era a única meta principal)
+  goals: Goal[];           // Legado (antes eram as únicas submetas)
+  mainGoals?: MainGoalGroup[]; // Novo formato: N Metas Principais -> N Submetas
   generalComments: string;
   fixedResponsibilities?: string;
   status: string;
   uid: string;
   createdAt: any;
+}
+
+export interface MeetingAction {
+  id: string;
+  text: string;
+  owner: 'Líder' | 'Liderado';
+  completed: boolean;
 }
 
 export interface Meeting {
@@ -64,8 +78,10 @@ export interface Meeting {
   summary?: string;
   recognition?: string;
   improvements?: string;
-  employeeActions?: string;
-  managerActions?: string;
+  employeeActions?: string; // Legado
+  managerActions?: string; // Legado
+  actionItems?: MeetingAction[];
+  sentiment?: '😃' | '😐' | '🙁';
   uid: string;
   createdAt: any;
 }

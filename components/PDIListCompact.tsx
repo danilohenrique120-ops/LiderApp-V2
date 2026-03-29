@@ -27,13 +27,22 @@ const PDIListCompact: React.FC<PDIListCompactProps> = ({ pdis, onSelect, selecte
         </thead>
         <tbody className="divide-y divide-slate-100">
           {pdis.map((pdi) => {
-            const completed = pdi.goals.filter(g => g.completed).length;
-            const total = pdi.goals.length;
+            const allGoals = [...(pdi.goals || [])];
+            if (pdi.mainGoals) {
+              pdi.mainGoals.forEach(mg => allGoals.push(...(mg.goals || [])));
+            }
+            
+            const completed = allGoals.filter(g => g.completed).length;
+            const total = allGoals.length;
             const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
             
             // Verifica se tem meta atrasada
-            const hasOverdue = pdi.goals.some(g => !g.completed && isBefore(parseISO(g.deadline), today));
+            const hasOverdue = allGoals.some(g => !g.completed && g.deadline && isBefore(parseISO(g.deadline), today));
             const isSelected = selectedId === pdi.id;
+            
+            const displayObjective = pdi.mainGoals && pdi.mainGoals.length > 0 
+                ? pdi.mainGoals.map(m => m.title).join(' | ') 
+                : pdi.careerObjective;
 
             return (
               <tr 
@@ -56,7 +65,7 @@ const PDIListCompact: React.FC<PDIListCompactProps> = ({ pdis, onSelect, selecte
                   <div className="flex items-center gap-2 max-w-[200px]">
                     <Target size={12} className="text-slate-300 shrink-0" />
                     <p className="text-xs font-medium text-slate-500 truncate italic">
-                      "{pdi.careerObjective}"
+                      "{displayObjective}"
                     </p>
                   </div>
                 </td>

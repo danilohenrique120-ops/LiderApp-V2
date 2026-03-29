@@ -21,7 +21,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const [formData, setFormData] = useState({
-        employee: '', careerObjective: '', goals: [] as Goal[], generalComments: '', fixedResponsibilities: ''
+        employee: '', careerObjective: '', goals: [] as Goal[], generalComments: '', fixedResponsibilities: '', mainGoals: [] as any[]
     });
     const [newGoal, setNewGoal] = useState({ text: '', deadline: '', category: '70% (Prática/Experiência)' });
     const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
@@ -51,7 +51,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
             await db.collection('pdis').add({ ...data, createdAt: new Date() });
         }
 
-        setFormData({ employee: '', careerObjective: '', goals: [], generalComments: '', fixedResponsibilities: '' });
+        setFormData({ employee: '', careerObjective: '', goals: [], generalComments: '', fixedResponsibilities: '', mainGoals: [] });
         setEditingId(null);
         setShowForm(false);
     };
@@ -80,14 +80,32 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
         setNewGoal({ text: '', deadline: '', category: '70% (Prática/Experiência)' });
     };
 
-    const toggleGoalStatus = async (pdiId: string, goalId: string) => {
+    const toggleGoalStatus = async (pdiId: string, goalId: string, mainGoalId?: string) => {
         const pdi = pdis.find(p => p.id === pdiId);
         if (!pdi) return;
-        const updatedGoals = pdi.goals.map(g => g.id === goalId ? { ...g, completed: !g.completed } : g);
-        await db.collection('pdis').doc(pdiId).update({ goals: updatedGoals });
+
+        let dataToUpdate: any = {};
+        let updatedPdiData = { ...pdi };
+
+        if (mainGoalId && pdi.mainGoals) {
+            const updatedMainGoals = pdi.mainGoals.map(mg => {
+                if (mg.id === mainGoalId) {
+                    return { ...mg, goals: mg.goals.map(g => g.id === goalId ? { ...g, completed: !g.completed } : g) };
+                }
+                return mg;
+            });
+            dataToUpdate = { mainGoals: updatedMainGoals };
+            updatedPdiData.mainGoals = updatedMainGoals;
+        } else {
+            const updatedGoals = pdi.goals.map(g => g.id === goalId ? { ...g, completed: !g.completed } : g);
+            dataToUpdate = { goals: updatedGoals };
+            updatedPdiData.goals = updatedGoals;
+        }
+
+        await db.collection('pdis').doc(pdiId).update(dataToUpdate);
 
         if (selectedPdi && selectedPdi.id === pdiId) {
-            setSelectedPdi({ ...selectedPdi, goals: updatedGoals });
+            setSelectedPdi(updatedPdiData);
         }
     };
 
@@ -97,7 +115,8 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
             careerObjective: pdi.careerObjective,
             goals: pdi.goals || [],
             generalComments: pdi.generalComments || '',
-            fixedResponsibilities: pdi.fixedResponsibilities || ''
+            fixedResponsibilities: pdi.fixedResponsibilities || '',
+            mainGoals: pdi.mainGoals || []
         });
         setEditingId(pdi.id);
         setShowForm(true);
@@ -117,7 +136,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                     <p className="text-slate-400 font-medium text-sm mt-2 uppercase tracking-widest text-[10px]">Portal de Alto Desempenho e Carreira</p>
                 </div>
                 <button
-                    onClick={() => { setShowForm(true); setEditingId(null); setFormData({ employee: '', careerObjective: '', goals: [], generalComments: '', fixedResponsibilities: '' }); }}
+                    onClick={() => { setShowForm(true); setEditingId(null); setFormData({ employee: '', careerObjective: '', goals: [], generalComments: '', fixedResponsibilities: '', mainGoals: [] }); }}
                     className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-100 transition-all hover:scale-105 flex items-center gap-2"
                 >
                     <Plus size={18} /> Novo Plano
@@ -173,16 +192,10 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                 employees={employees}
                 formData={formData}
                 setFormData={setFormData}
-                newGoal={newGoal}
-                setNewGoal={setNewGoal}
-                editingGoalId={editingGoalId}
-                setEditingGoalId={setEditingGoalId}
-                onAddGoal={addGoal}
                 onSave={handleSave}
                 onClose={() => {
                     setShowForm(false);
-                    setEditingGoalId(null);
-                    setNewGoal({ text: '', deadline: '', category: '70% (Prática/Experiência)' });
+                    setFormData({ employee: '', careerObjective: '', goals: [], generalComments: '', fixedResponsibilities: '', mainGoals: [] });
                 }}
             />
         </div>
