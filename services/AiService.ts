@@ -123,7 +123,7 @@ export class AiService {
    * IA PROATIVA: RADAR LÍDER
    */
   public async analyzeProactiveRisks(risks: string[]): Promise<string> {
-    if (risks.length === 0) return "Operação estável. Todos os indicadores dentro do padrão.";
+    if (risks.length === 0) return "🟢 Estável: Operação em conformidade. Continue o bom trabalho!";
     if (!this.isEnabled || !this.ai) return "Análise de riscos indisponível (API Key missing).";
 
     try {
@@ -134,15 +134,16 @@ export class AiService {
           ${risks.join('\n')}
 
           Sua missão:
-          1. Priorize o risco MAIS CRÍTICO para a segurança ou produção.
-          2. Gere uma recomendação curta (máx 2 frases) para o gestor agir HOJE.
-          3. Use um tom de "parceiro estratégico".
+          Retorne ESTRITAMENTE 3 bullet points no formato exato a seguir, sem texto introdutório ou conclusivo:
+          🔴 Risco Crítico: [sua análise de segurança ou parada iminente com base nos dados]
+          🟡 Atenção: [gargalos operacionais ou pendências importantes]
+          🟢 Estável: [o que os dados não relatam como problema ou uma sugestão de fôlego]
         `,
         config: {
-          systemInstruction: "Você é o Mentor Estratégico do Sistema Líder. Você transforma dados de risco em ações de liderança imediatas e precisas."
+          systemInstruction: "Você é o Mentor Estratégico do Sistema Líder. Exija brevidade extrema. NUNCA gere explicações ou textos longos, retorne sempre estritamente os 3 bullets no formato exigido de forma concisa."
         }
       });
-      return response.text || "Detectados pontos de atenção. Verifique os indicadores da matriz.";
+      return response.text || "🔴 Risco Crítico: Erro nos dados.\n🟡 Atenção: O Radar não carregou.\n🟢 Estável: App no ar.";
     } catch (error) {
       return "Análise de radar indisponível no momento.";
     }

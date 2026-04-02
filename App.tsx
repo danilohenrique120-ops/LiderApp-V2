@@ -293,6 +293,9 @@ const App: React.FC = () => {
               trainingRecords={trainingRecords}
               productionData={productionData}
               investigations={humanErrorInvestigations}
+              todoTasks={todoTasks}
+              followUpItems={followUpItems}
+              db={db}
               onNavigate={handleTabClick}
               user={userData}
             />
