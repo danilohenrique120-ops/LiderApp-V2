@@ -351,4 +351,62 @@ export class AiService {
       throw new Error("Falha ao gerar relatório.");
     }
   }
+
+  public async structureTranscription(transcription: string): Promise<any> {
+    if (!this.isEnabled || !this.ai) {
+      throw new Error("Serviço de IA não configurado (API Key ausente ou inválida).");
+    }
+    const model = 'gemini-2.5-flash';
+    try {
+      const response = await this.ai.models.generateContent({
+        model,
+        contents: `
+          Você recebeu a transcrição bruta de uma reunião de feedback 1:1 entre um líder e um liderado:
+          "${transcription}"
+
+          Sua missão é analisar e estruturar esse texto de forma detalhada nos seguintes campos:
+          1. recognition: Pontos fortes, elogios e realizações do liderado discutidas.
+          2. improvements: Oportunidades de melhoria, gaps ou desvios táticos abordados.
+          3. actionItems: Lista de tarefas e compromissos acordados. Cada item deve conter:
+             - text: Descrição clara da tarefa.
+             - owner: Proprietário. Deve ser estritamente "Líder" ou "Liderado".
+             - completed: false.
+          4. summary: Resumo da conversa e combinados gerais.
+          5. sentiment: Sentimento geral do colaborador (😃 Ótimo, 😐 Neutro, 🙁 Preocupante).
+        `,
+        config: {
+          systemInstruction: "Você é um especialista em estruturação de relatórios e atas de reuniões de feedback industrial do Método Sistema Líder.",
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              recognition: { type: Type.STRING },
+              improvements: { type: Type.STRING },
+              summary: { type: Type.STRING },
+              sentiment: { type: Type.STRING },
+              actionItems: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    text: { type: Type.STRING },
+                    owner: { type: Type.STRING },
+                    completed: { type: Type.BOOLEAN }
+                  },
+                  required: ["text", "owner", "completed"]
+                }
+              }
+            },
+            required: ["recognition", "improvements", "summary", "sentiment", "actionItems"]
+          }
+        }
+      });
+      let text = response.text || "{}";
+      text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(text);
+    } catch (error: any) {
+      console.error("AI Service Error (structureTranscription):", error);
+      throw new Error(`Falha ao estruturar transcrição: ${error.message}`);
+    }
+  }
 }
