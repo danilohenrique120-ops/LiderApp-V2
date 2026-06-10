@@ -532,7 +532,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
             <div className="flex flex-col lg:flex-row gap-6">
                 
                 {/* COLUMN 1: LEFT SIDEBAR (OPERATORS LIST) */}
-                <div className={`w-full lg:w-80 shrink-0 bg-slate-900 border border-slate-800 rounded-[2rem] p-4 flex flex-col h-[calc(100vh-140px)] sticky top-24 ${selectedEmployee ? 'hidden lg:flex' : 'flex'}`}>
+                <div className={`w-full lg:w-80 shrink-0 bg-slate-800 border border-slate-700 rounded-[2rem] p-4 flex flex-col h-[calc(100vh-140px)] sticky top-24 ${selectedEmployee ? 'hidden lg:flex' : 'flex'}`}>
                     
                     {/* Header */}
                     <div className="mb-4">
@@ -584,7 +584,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                     className={`w-full text-left p-3 rounded-2xl border transition-all flex items-center gap-3 group relative ${
                                         isSelected 
                                             ? 'bg-blue-600/10 border-blue-500/50 text-white' 
-                                            : 'bg-slate-950 border-slate-900 hover:border-slate-800 text-slate-300 hover:text-white'
+                                            : 'bg-slate-950 border-slate-900 hover:border-slate-700 text-slate-300 hover:text-white'
                                     }`}
                                 >
                                     {/* Initials & Status light */}
@@ -657,7 +657,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                             <div id="general-pdi-cockpit" className="space-y-6">
                                 {/* Statistics Cards Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-700 transition-colors">
+                                    <div className="bg-slate-800 border border-slate-700 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-600 transition-colors">
                                         <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">
                                             <Target size={24} />
                                         </div>
@@ -666,7 +666,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                             <h3 className="text-2xl font-black text-slate-100 mt-1">{activePdiCount}</h3>
                                         </div>
                                     </div>
-                                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-700 transition-colors">
+                                    <div className="bg-slate-800 border border-slate-700 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-600 transition-colors">
                                         <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">
                                             <TrendingUp size={24} />
                                         </div>
@@ -675,7 +675,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                             <h3 className="text-2xl font-black text-slate-100 mt-1">{teamProgressMetrics.avgProgress}%</h3>
                                         </div>
                                     </div>
-                                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-700 transition-colors">
+                                    <div className="bg-slate-800 border border-slate-700 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-600 transition-colors">
                                         <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center border border-rose-500/20">
                                             <AlertTriangle size={24} />
                                         </div>
@@ -689,7 +689,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                 {/* 70/20/10 distribution & Overdue Queue split */}
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     {/* 70/20/10 visual breakdown */}
-                                    <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 flex flex-col justify-between h-[380px]">
+                                    <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6 flex flex-col justify-between h-[380px]">
                                         <div>
                                             <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2 mb-1">
                                                 <BookOpen size={16} className="text-blue-500" />
@@ -730,7 +730,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                     </div>
 
                                     {/* Overdue subgoals queue */}
-                                    <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-[2rem] p-6 flex flex-col h-[380px]">
+                                    <div className="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-[2rem] p-6 flex flex-col h-[380px]">
                                         <div className="mb-4">
                                             <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
                                                 <AlertTriangle size={16} className="text-rose-500 animate-pulse" />
@@ -758,7 +758,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                                     </div>
                                                     <button 
                                                         onClick={() => handleToggleGoal(pdiId, goal.id, mainGoalId)}
-                                                        className="w-10 h-10 bg-slate-900 border border-slate-800 hover:bg-emerald-500 hover:text-white hover:border-emerald-600 rounded-xl flex items-center justify-center transition-all text-slate-500 shrink-0"
+                                                        className="w-10 h-10 bg-slate-800 border border-slate-700 hover:bg-emerald-500 hover:text-white hover:border-emerald-600 rounded-xl flex items-center justify-center transition-all text-slate-500 shrink-0"
                                                         title="Marcar como Concluído"
                                                     >
                                                         <Check size={18} />
@@ -786,7 +786,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                         <div className="space-y-6">
                             
                             {/* Navigation Header */}
-                            <div className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-3xl p-4">
+                            <div className="flex items-center justify-between bg-slate-800 border border-slate-700 rounded-3xl p-4">
                                 <div className="flex items-center gap-3">
                                     <button 
                                         onClick={() => setSelectedEmployee(null)} 
@@ -830,7 +830,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
 
                             {/* STATE B1: OPERATOR HAS NO ACTIVE PDI (CREATE FORM INLINE) */}
                             {!currentOperatorPdi && (
-                                <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 space-y-6 animate-fade">
+                                <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6 space-y-6 animate-fade">
                                     <div className="border-b border-slate-800 pb-3">
                                         <h3 className="text-xs font-black uppercase text-blue-400 tracking-wider flex items-center gap-2">
                                             <Target size={16} />
@@ -914,7 +914,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                             <div className="space-y-6">
                                                 
                                                 {/* Header objective & responsibilities (Editable inline) */}
-                                                <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 space-y-4">
+                                                <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6 space-y-4">
                                                     <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
                                                         <span className="text-[9px] font-black uppercase text-blue-400 tracking-wider">Alinhamento de Carreira</span>
                                                         <button 
@@ -977,7 +977,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                                             <input 
                                                                 type="text" 
                                                                 placeholder="Adicionar Meta Principal (Painel)..." 
-                                                                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none"
+                                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none"
                                                                 value={newMainGoalTitle}
                                                                 onChange={e => setNewMainGoalTitle(e.target.value)}
                                                                 onKeyDown={e => { if(e.key === 'Enter') { e.preventDefault(); handleAddMainGoal(); } }}
@@ -995,7 +995,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                                     {/* Groups of goals */}
                                                     <div className="space-y-4">
                                                         {currentMainGoals.map((mg, index) => (
-                                                            <div key={mg.id} className="bg-slate-900 border border-slate-800 rounded-[2rem] p-5 space-y-4 animate-fade">
+                                                            <div key={mg.id} className="bg-slate-800 border border-slate-700 rounded-[2rem] p-5 space-y-4 animate-fade">
                                                                 <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                                                                     <h5 className="text-xs font-black uppercase text-slate-300 flex items-center gap-2">
                                                                         <Target size={14} className="text-blue-500" />
@@ -1016,7 +1016,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                                                     {mg.goals && mg.goals.map(g => {
                                                                         const isOverdue = !g.completed && g.deadline && isOverdueGoal(g.deadline);
                                                                         return (
-                                                                            <div key={g.id} className={`flex items-center justify-between p-3.5 bg-slate-950 border rounded-xl group transition-colors ${g.completed ? 'border-emerald-950/20 bg-emerald-950/5' : 'border-slate-950 hover:border-slate-800 bg-slate-950'}`}>
+                                                                            <div key={g.id} className={`flex items-center justify-between p-3.5 bg-slate-950 border rounded-xl group transition-colors ${g.completed ? 'border-emerald-950/20 bg-emerald-950/5' : 'border-slate-950 hover:border-slate-700 bg-slate-950'}`}>
                                                                                 <div className="flex-1 pr-4 min-w-0">
                                                                                     <p className={`text-xs font-semibold ${g.completed ? 'text-slate-550 line-through opacity-70' : 'text-slate-200'}`}>{g.text}</p>
                                                                                     <div className="flex items-center gap-2 mt-2">
@@ -1070,12 +1070,12 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                                                             autoFocus
                                                                             type="text" 
                                                                             placeholder="Descreva o passo prático da submeta..." 
-                                                                            className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                                                                            className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                                                                             value={newGoalText}
                                                                             onChange={e => setNewGoalText(e.target.value)}
                                                                         />
                                                                         <select 
-                                                                            className="bg-slate-900 border border-slate-800 rounded-xl px-2 py-2 text-[10px] font-black uppercase text-slate-350 focus:outline-none cursor-pointer"
+                                                                            className="bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-[10px] font-black uppercase text-slate-350 focus:outline-none cursor-pointer"
                                                                             value={newGoalCategory}
                                                                             onChange={e => setNewGoalCategory(e.target.value)}
                                                                         >
@@ -1085,7 +1085,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                                                         </select>
                                                                         <input 
                                                                             type="date" 
-                                                                            className="bg-slate-900 border border-slate-800 rounded-xl px-2 py-2 text-[10px] font-black uppercase text-slate-350 focus:outline-none"
+                                                                            className="bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-[10px] font-black uppercase text-slate-350 focus:outline-none"
                                                                             value={newGoalDeadline}
                                                                             onChange={e => setNewGoalDeadline(e.target.value)}
                                                                         />
@@ -1128,7 +1128,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                             <div className="space-y-6 animate-fade">
                                                 
                                                 {/* Skill Gaps Card */}
-                                                <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6">
+                                                <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6">
                                                     <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2 mb-4">
                                                         <Award size={16} className="text-blue-500" />
                                                         Matriz de Competências & Gaps Críticos
@@ -1169,7 +1169,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                                 </div>
 
                                                 {/* Human Error Investigations log */}
-                                                <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6">
+                                                <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6">
                                                     <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2 mb-4">
                                                         <AlertTriangle size={16} className="text-rose-500" />
                                                         Registro de Ocorrências e Desvios do Liderado
@@ -1210,7 +1210,7 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                             <div className="space-y-6 animate-fade">
                                                 
                                                 {/* Strategic roadmap advisor */}
-                                                <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 space-y-4">
+                                                <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6 space-y-4">
                                                     <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                                                         <div>
                                                             <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
@@ -1230,11 +1230,11 @@ const PdiView: React.FC<PdiViewProps> = ({ pdis, employees, user, db }) => {
                                                     </div>
 
                                                     {aiRoadmap ? (
-                                                        <div className="bg-slate-955 border border-slate-900 rounded-2xl p-5 text-xs text-slate-300 leading-relaxed whitespace-pre-wrap animate-fade font-medium">
+                                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 text-xs text-slate-300 leading-relaxed whitespace-pre-wrap animate-fade font-medium">
                                                             {aiRoadmap}
                                                         </div>
                                                     ) : (
-                                                        <div className="py-12 text-center bg-slate-955/20 border border-slate-900 border-dashed rounded-2xl">
+                                                        <div className="py-12 text-center bg-slate-900/20 border border-slate-800 border-dashed rounded-2xl">
                                                             <ShieldAlert size={28} className="text-slate-800 mx-auto mb-2" />
                                                             <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Trilha Tática Não Gerada</p>
                                                             <p className="text-slate-650 text-[10px] mt-0.5 max-w-sm mx-auto">Solicite a geração acima para obter um roteiro customizado de mentorias, desafios práticos e cursos recomendados para {selectedEmployee}.</p>

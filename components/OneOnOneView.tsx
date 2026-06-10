@@ -619,7 +619,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
             <div className="flex flex-col lg:flex-row gap-6">
                 
                 {/* COLUMN 1: LEFT SIDEBAR (OPERATORS LIST) */}
-                <div className={`w-full lg:w-80 shrink-0 bg-slate-900 border border-slate-800 rounded-[2rem] p-4 flex flex-col h-[calc(100vh-140px)] sticky top-24 ${selectedEmployee ? 'hidden lg:flex' : 'flex'}`}>
+                <div className={`w-full lg:w-80 shrink-0 bg-slate-800 border border-slate-700 rounded-[2rem] p-4 flex flex-col h-[calc(100vh-140px)] sticky top-24 ${selectedEmployee ? 'hidden lg:flex' : 'flex'}`}>
                     
                     {/* Header */}
                     <div className="mb-4">
@@ -671,7 +671,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                     className={`w-full text-left p-3 rounded-2xl border transition-all flex items-center gap-3 group relative ${
                                         isSelected 
                                             ? 'bg-blue-600/10 border-blue-500/50 text-white' 
-                                            : 'bg-slate-950 border-slate-900 hover:border-slate-800 text-slate-300 hover:text-white'
+                                            : 'bg-slate-950 border-slate-900 hover:border-slate-600 text-slate-300 hover:text-white'
                                     }`}
                                 >
                                     {/* Initials & Status light */}
@@ -746,7 +746,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                             <div id="general-one-on-one-cockpit" className="space-y-6">
                                 {/* Statistics Cards Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-700 transition-colors">
+                                    <div className="bg-slate-800 border border-slate-700 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-600 transition-colors">
                                         <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-105 transition-transform border border-blue-500/20">
                                             <MessageSquare size={24} />
                                         </div>
@@ -755,7 +755,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                             <h3 className="text-2xl font-black text-slate-100 mt-1">{currentMonthMeetings.length}</h3>
                                         </div>
                                     </div>
-                                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-700 transition-colors">
+                                    <div className="bg-slate-800 border border-slate-700 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-600 transition-colors">
                                         <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-105 transition-transform border border-emerald-500/20">
                                             <Target size={24} />
                                         </div>
@@ -767,7 +767,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-700 transition-colors">
+                                    <div className="bg-slate-800 border border-slate-700 p-6 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:border-slate-600 transition-colors">
                                         <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-105 transition-transform border border-amber-500/20">
                                             <CheckSquare size={24} />
                                         </div>
@@ -781,7 +781,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                 {/* Central Action Items & Leadership Guide split */}
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     {/* Action Items List */}
-                                    <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-[2rem] p-6 flex flex-col h-[500px]">
+                                    <div className="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-[2rem] p-6 flex flex-col h-[500px]">
                                         <div className="mb-4">
                                             <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
                                                 <Target size={16} className="text-blue-500" />
@@ -792,7 +792,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                         
                                         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
                                             {teamPendingActionsList.map(({ meetingId, employee, date, action }) => (
-                                                <div key={action.id} className="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-900 rounded-2xl hover:border-slate-800 transition-colors">
+                                                <div key={action.id} className="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-900 rounded-2xl hover:border-slate-600 transition-colors">
                                                     <div className="flex-1 min-w-0 pr-4">
                                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                                             <span className="text-[9px] font-black bg-blue-900/30 text-blue-400 px-2 py-0.5 rounded border border-blue-950">
@@ -809,7 +809,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                     </div>
                                                     <button 
                                                         onClick={() => toggleActionCompletion(meetingId, action.id, action.completed)}
-                                                        className="w-10 h-10 bg-slate-900 border border-slate-800 hover:bg-emerald-500 hover:text-white hover:border-emerald-600 rounded-xl flex items-center justify-center transition-all shadow text-slate-500 shrink-0"
+                                                        className="w-10 h-10 bg-slate-800 border border-slate-700 hover:bg-emerald-500 hover:text-white hover:border-emerald-600 rounded-xl flex items-center justify-center transition-all shadow text-slate-500 shrink-0"
                                                         title="Concluir Ação"
                                                     >
                                                         <Check size={18} />
@@ -828,7 +828,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                     </div>
 
                                     {/* Meeting Leadership Guide */}
-                                    <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 flex flex-col justify-between">
+                                    <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6 flex flex-col justify-between">
                                         <div>
                                             <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2 mb-4">
                                                 <BookOpen size={16} className="text-blue-500" />
@@ -878,7 +878,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                         <div className="space-y-6">
                             
                             {/* Navigation Header */}
-                            <div className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-3xl p-4">
+                            <div className="flex items-center justify-between bg-slate-800 border border-slate-700 rounded-3xl p-4">
                                 <div className="flex items-center gap-3">
                                     <button 
                                         onClick={() => setSelectedEmployee(null)} 
@@ -919,19 +919,19 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
 
                             {/* Operator Quick Stats Bar */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col justify-center">
+                                <div className="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex flex-col justify-center">
                                     <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Total de Reuniões</span>
                                     <p className="text-lg font-black text-white mt-0.5">{meetings.filter(m => m.employee === selectedEmployee).length}</p>
                                 </div>
-                                <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col justify-center">
+                                <div className="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex flex-col justify-center">
                                     <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Último Encontro</span>
                                     <p className="text-xs font-bold text-slate-200 mt-1 truncate">{lastMeeting?.date || 'Não registrado'}</p>
                                 </div>
-                                <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col justify-center">
+                                <div className="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex flex-col justify-center">
                                     <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Pendências de Planos</span>
                                     <p className="text-lg font-black text-amber-400 mt-0.5">{operatorStats[selectedEmployee]?.pendingActions || 0}</p>
                                 </div>
-                                <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col justify-center">
+                                <div className="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex flex-col justify-center">
                                     <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider">Último Sentimento</span>
                                     <p className="text-lg mt-0.5">{lastMeeting?.sentiment || '—'}</p>
                                 </div>
@@ -968,7 +968,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                         
                                         {/* FORM: ACTIVE MEETING */}
                                         {showForm && (
-                                            <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 space-y-6 animate-fade">
+                                            <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6 space-y-6 animate-fade">
                                                 
                                                 <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                                                     <div>
@@ -1012,7 +1012,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                                     className={`py-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                                                                         formData.sentiment === '😃' 
                                                                             ? 'bg-emerald-950/40 border-emerald-500 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]' 
-                                                                            : 'bg-slate-950 border-slate-800 text-slate-450 hover:bg-slate-900'
+                                                                            : 'bg-slate-950 border-slate-800 text-slate-450 hover:bg-slate-850'
                                                                     }`}
                                                                 >
                                                                     <Smile size={16} /> Ótimo
@@ -1023,7 +1023,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                                     className={`py-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                                                                         formData.sentiment === '😐' 
                                                                             ? 'bg-amber-950/40 border-amber-500 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.1)]' 
-                                                                            : 'bg-slate-950 border-slate-800 text-slate-450 hover:bg-slate-900'
+                                                                            : 'bg-slate-950 border-slate-800 text-slate-450 hover:bg-slate-850'
                                                                     }`}
                                                                 >
                                                                     <Meh size={16} /> Neutro
@@ -1034,7 +1034,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                                     className={`py-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                                                                         formData.sentiment === '🙁' 
                                                                             ? 'bg-rose-950/40 border-rose-500 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.1)]' 
-                                                                            : 'bg-slate-950 border-slate-800 text-slate-450 hover:bg-slate-900'
+                                                                            : 'bg-slate-950 border-slate-800 text-slate-450 hover:bg-slate-850'
                                                                     }`}
                                                                 >
                                                                     <Frown size={16} /> Preocupante
@@ -1044,7 +1044,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                     </div>
 
                                                     {/* Icebreaker Rotator Panel */}
-                                                    <div className="bg-slate-955 border border-slate-900 rounded-2xl p-4 flex justify-between items-start gap-4 animate-fade">
+                                                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 flex justify-between items-start gap-4 animate-fade">
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-1.5 text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1.5">
                                                                 <Heart size={10} /> Quebra-Gelo Recomendado
@@ -1107,7 +1107,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                                 <label className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Transcrição Bruta (Editável)</label>
                                                                 <textarea
                                                                     rows={3}
-                                                                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-300 font-semibold focus:outline-none focus:border-blue-500"
+                                                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3.5 text-xs text-slate-300 font-semibold focus:outline-none focus:border-blue-500"
                                                                     placeholder="O texto gravado aparecerá aqui. Você também pode digitar correções manuais..."
                                                                     value={liveTranscript}
                                                                     onChange={e => setLiveTranscript(e.target.value)}
@@ -1197,7 +1197,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
 
                                                         <div className="flex flex-col sm:flex-row gap-2">
                                                             <select 
-                                                                className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-300 w-full sm:w-1/4 focus:outline-none focus:border-blue-500"
+                                                                className="p-3 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-slate-300 w-full sm:w-1/4 focus:outline-none focus:border-blue-500"
                                                                 value={newActionOwner}
                                                                 onChange={e => setNewActionOwner(e.target.value as any)}
                                                             >
@@ -1208,7 +1208,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                             <div className="flex flex-1 gap-2">
                                                                 <input 
                                                                     type="text"
-                                                                    className="w-full p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-semibold text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                                                                    className="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500"
                                                                     placeholder="Qual será a tarefa específica acordada..."
                                                                     value={newActionText}
                                                                     onChange={e => setNewActionText(e.target.value)}
@@ -1227,7 +1227,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                         {formData.actionItems && formData.actionItems.length > 0 && (
                                                             <ul className="space-y-2 pt-2">
                                                                 {formData.actionItems.map(action => (
-                                                                    <li key={action.id} className="flex justify-between items-center bg-slate-900 border border-slate-800/80 p-3 rounded-xl group animate-fade">
+                                                                    <li key={action.id} className="flex justify-between items-center bg-slate-800 border border-slate-700/80 p-3 rounded-xl group animate-fade">
                                                                         <div className="flex items-center gap-2.5">
                                                                             <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${action.owner === 'Líder' ? 'bg-indigo-900/40 text-indigo-400 border border-indigo-955' : 'bg-emerald-900/40 text-emerald-400 border border-emerald-955'}`}>
                                                                                 {action.owner}
@@ -1270,7 +1270,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                         <button 
                                                             type="button" 
                                                             onClick={() => { setShowForm(false); setEditingId(null); setAiSuggestion(null); }} 
-                                                            className="px-6 py-3.5 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl font-black uppercase tracking-wider text-xs text-slate-400"
+                                                            className="px-6 py-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-xl font-black uppercase tracking-wider text-xs text-slate-400"
                                                         >
                                                             Cancelar
                                                         </button>
@@ -1297,7 +1297,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                             {groupedMeetings[monthStr].map(m => {
                                                                 const isExpanded = expandedCard === m.id;
                                                                 return (
-                                                                    <div key={m.id} id={`meeting-card-${m.id}`} className="bg-slate-900 border border-slate-800 rounded-[2rem] p-5 shadow-sm space-y-4 hover:border-slate-700 transition-colors animate-fade">
+                                                                    <div key={m.id} id={`meeting-card-${m.id}`} className="bg-slate-800 border border-slate-700 rounded-[2rem] p-5 shadow-sm space-y-4 hover:border-slate-600 transition-colors animate-fade">
                                                                         
                                                                         {/* Card Header info */}
                                                                         <div className="flex justify-between items-start">
@@ -1330,7 +1330,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                                                         {/* Toggle Button */}
                                                                         <button
                                                                             onClick={() => setExpandedCard(isExpanded ? null : m.id)}
-                                                                            className="w-full flex items-center justify-between px-4 py-2 bg-slate-950 hover:bg-slate-900 border border-slate-900 rounded-xl transition-all text-[9px] font-black text-slate-400 uppercase tracking-widest"
+                                                                            className="w-full flex items-center justify-between px-4 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-900 rounded-xl transition-all text-[9px] font-black text-slate-400 uppercase tracking-widest"
                                                                         >
                                                                             {isExpanded ? 'Ocular Relato' : 'Ver Detalhes da Conversa'}
                                                                             {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -1408,7 +1408,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                     <div className="space-y-6 animate-fade">
                                         
                                         {/* Competence Gaps Grid */}
-                                        <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6">
+                                        <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6">
                                             <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2 mb-4">
                                                 <Award size={16} className="text-blue-500" />
                                                 Gaps de Competências Operacionais
@@ -1449,7 +1449,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                         </div>
 
                                         {/* PDI Goals panel */}
-                                        <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6">
+                                        <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6">
                                             <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2 mb-2">
                                                 <Target size={16} className="text-blue-500" />
                                                 Metas do Plano de Desenvolvimento Individual (PDI)
@@ -1530,7 +1530,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                         </div>
 
                                         {/* Occurrence log */}
-                                        <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6">
+                                        <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6">
                                             <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2 mb-4">
                                                 <AlertTriangle size={16} className="text-rose-500" />
                                                 Ocorrências de Erros & Desvios Operacionais
@@ -1572,7 +1572,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                         
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {/* Sentiment breakdown visual */}
-                                            <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 flex flex-col justify-between h-[280px]">
+                                            <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6 flex flex-col justify-between h-[280px]">
                                                 <div>
                                                     <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2 mb-1">
                                                         <Smile size={16} className="text-blue-500" />
@@ -1628,7 +1628,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                             </div>
 
                                             {/* Action Plan Execution Circular Gauge */}
-                                            <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 flex flex-col justify-between h-[280px]">
+                                            <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6 flex flex-col justify-between h-[280px]">
                                                 <div>
                                                     <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2 mb-1">
                                                         <TrendingUp size={16} className="text-blue-500" />
@@ -1687,7 +1687,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
                                         </div>
 
                                         {/* AI strategic leadership mentorship diagnostic */}
-                                        <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 space-y-4">
+                                        <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-6 space-y-4">
                                             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                                                 <div>
                                                     <h4 className="font-black text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
