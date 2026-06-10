@@ -286,7 +286,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* SEÇÃO 1: TOPO CRÍTICO E RADAR */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8 animate-fade">
                 {/* RADAR LÍDER (AI) */}
-                <div className="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-[2rem] overflow-hidden shadow-2xl relative">
+                <div className="lg:col-span-3 bg-slate-800 border border-slate-700 rounded-[2rem] overflow-hidden shadow-2xl relative">
                     <div className="p-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-transparent"></div>
                     <div className="p-6 md:p-8">
                         <div className="flex items-center justify-between mb-4">
@@ -297,7 +297,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             {!isScanning && (
                                 <button
                                     onClick={handleManualRefresh}
-                                    className="p-2 border border-slate-700 hover:bg-slate-800 text-slate-400 rounded-lg transition-all group"
+                                    className="p-2 border border-slate-700 hover:bg-slate-700 text-slate-400 rounded-lg transition-all group"
                                     title="Regerar Radar"
                                 >
                                     <RefreshCw size={14} className="group-hover:rotate-180 transition-transform" />
@@ -314,7 +314,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="space-y-3 mt-4">
                                 {formattedRadar.map((line, idx) => {
                                     let textColor = "text-slate-300";
-                                    let bgColor = "bg-slate-800/50";
+                                    let bgColor = "bg-slate-900/50";
                                     if (line.includes("🔴")) { textColor = "text-rose-400 font-bold"; bgColor = "bg-rose-500/10 border border-rose-500/20"; }
                                     else if (line.includes("🟡")) { textColor = "text-amber-400"; bgColor = "bg-amber-500/10 border border-amber-500/20"; }
                                     else if (line.includes("🟢")) { textColor = "text-emerald-400"; bgColor = "bg-emerald-500/10 border border-emerald-500/20"; }
@@ -331,7 +331,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
                 {/* MÉTRICA CRÍTICA: GAPS */}
-                <div className="bg-slate-900 border border-slate-800 p-8 rounded-[2rem] flex flex-col items-center justify-center text-center shadow-xl group">
+                <div className="bg-slate-800 border border-slate-700 p-8 rounded-[2rem] flex flex-col items-center justify-center text-center shadow-xl group">
                     <div className="w-14 h-14 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center border border-rose-500/20 mb-4 transition-transform group-hover:scale-110">
                         <Zap size={24} />
                     </div>
@@ -339,7 +339,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Gaps Críticos Abertos</p>
                     <button 
                          onClick={() => onNavigate?.('matrix')}
-                         className="mt-6 px-4 py-2 border border-slate-700 hover:border-slate-500 hover:bg-slate-800 rounded-lg text-slate-300 text-[9px] font-bold uppercase tracking-widest transition-all"
+                         className="mt-6 px-4 py-2 border border-slate-700 hover:border-slate-500 hover:bg-slate-700 rounded-lg text-slate-300 text-[9px] font-bold uppercase tracking-widest transition-all"
                     >Ver Matriz</button>
                 </div>
             </div>
@@ -347,7 +347,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* SEÇÃO 2 E 3: FOCO DE HOJE + TERMÔMETRO DA EQUIPE */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
                 {/* FOCO DE HOJE */}
-                <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-[2rem] p-8 shadow-xl flex flex-col">
+                <div className="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-[2rem] p-8 shadow-xl flex flex-col">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-3">
@@ -360,7 +360,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
                         {todaysFocus.length > 0 ? (
                             todaysFocus.map(item => (
-                                <div key={item.id} className={`flex items-center justify-between p-4 rounded-2xl border ${item.isOverdue ? 'bg-red-500/5 border-red-500/30' : 'bg-slate-800/50 border-slate-700'} hover:border-blue-500 transition-colors`}>
+                                <div key={item.id} className={`flex items-center justify-between p-4 rounded-2xl border ${item.isOverdue ? 'bg-red-500/5 border-red-500/30' : 'bg-slate-900/50 border-slate-800'} hover:border-blue-500 transition-colors`}>
                                     <div className="flex flex-col gap-1 w-full mr-4">
                                         <div className="flex items-center gap-2">
                                             <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${item.type === 'Agenda' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-fuchsia-500/20 text-fuchsia-400'}`}>
@@ -384,7 +384,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     </div>
                                     <button 
                                         onClick={() => handleQuickComplete(item)}
-                                        className="shrink-0 w-12 h-12 bg-slate-800 hover:bg-emerald-500 hover:text-white text-slate-400 rounded-xl flex items-center justify-center transition-all border border-slate-700 shadow-md group"
+                                        className="shrink-0 w-12 h-12 bg-slate-900 hover:bg-emerald-500 hover:text-white text-slate-400 rounded-xl flex items-center justify-center transition-all border border-slate-800 shadow-md group"
                                         title="Concluir"
                                     >
                                         <CheckCircle2 size={24} className="group-hover:scale-110 transition-transform" />
@@ -392,7 +392,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </div>
                             ))
                         ) : (
-                            <div className="h-48 flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-2xl bg-slate-800/30">
+                            <div className="h-48 flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-2xl bg-slate-900/30">
                                 <Sparkles size={32} className="text-emerald-500/50 mb-3" />
                                 <p className="text-slate-400 text-sm font-bold">Nenhum foco crítico pendente para hoje.</p>
                             </div>
@@ -401,7 +401,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
                 {/* TERMÔMETRO DA EQUIPE E 1:1 */}
-                <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-8 shadow-xl flex flex-col">
+                <div className="bg-slate-800 border border-slate-700 rounded-[2rem] p-8 shadow-xl flex flex-col">
                     <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-800">
                         <div className="flex items-center gap-4">
                              <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center">
@@ -420,15 +420,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </h3>
 
                     <div className="flex flex-wrap items-center gap-3 mb-6">
-                        <div className="flex items-center gap-1.5 border border-slate-700/50 bg-slate-800/30 px-2 py-1 rounded-lg cursor-help transition-all hover:bg-slate-700" title="Conversa realizada nos últimos 15 dias">
+                        <div className="flex items-center gap-1.5 border border-slate-700/50 bg-slate-900/30 px-2 py-1 rounded-lg cursor-help transition-all hover:bg-slate-700" title="Conversa realizada nos últimos 15 dias">
                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Em dia</span>
                         </div>
-                        <div className="flex items-center gap-1.5 border border-slate-700/50 bg-slate-800/30 px-2 py-1 rounded-lg cursor-help transition-all hover:bg-slate-700" title="Conversa ocorreu entre 16 e 30 dias">
+                        <div className="flex items-center gap-1.5 border border-slate-700/50 bg-slate-900/30 px-2 py-1 rounded-lg cursor-help transition-all hover:bg-slate-700" title="Conversa ocorreu entre 16 e 30 dias">
                              <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Próximo</span>
                         </div>
-                        <div className="flex items-center gap-1.5 border border-slate-700/50 bg-slate-800/30 px-2 py-1 rounded-lg cursor-help transition-all hover:bg-slate-700" title="Alinhamento pendente há mais de 30 dias">
+                        <div className="flex items-center gap-1.5 border border-slate-700/50 bg-slate-900/30 px-2 py-1 rounded-lg cursor-help transition-all hover:bg-slate-700" title="Alinhamento pendente há mais de 30 dias">
                              <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"></div>
                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Atrasado</span>
                         </div>
@@ -436,7 +436,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-2">
                         {teamThermometer.length > 0 ? teamThermometer.map((emp, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition-colors">
+                            <div key={idx} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-xl hover:bg-slate-900 transition-colors">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 bg-slate-700 text-white rounded flex items-center justify-center text-[10px] font-black">
                                         {emp.name.charAt(0)}
