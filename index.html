@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -6,55 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>Líder App - Gestão Industrial 4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        slate: {
-                            50: '#FAF9F6',   // Soft warm cream-white
-                            100: '#F4EFEA',  // Warm oatmeal
-                            200: '#E7DDD3',  // Softer warm beige
-                            300: '#D2C3B4',  // Stone beige
-                            400: '#A3968A',  // Soft warm gray
-                            500: '#7F7367',  // Soft coffee gray
-                            600: '#665A50',  // Warm earth gray
-                            700: '#4A3F35',  // Warm border color (chocolate-gray)
-                            800: '#28231E',  // Elevated card background (warm cocoa)
-                            900: '#191512',  // Base page background (warm espresso)
-                            950: '#0F0C0A'   // Deep sunken inputs background
-                        },
-                        blue: {
-                            50: '#F0F3FC',
-                            100: '#DFE5FA',
-                            200: '#C3CEF6',
-                            300: '#9AB0F0',
-                            400: '#7895EB',
-                            500: '#587AE6',   // Warmer, softer periwinkle blue
-                            600: '#3D61DB',
-                            700: '#2A49BF',
-                            800: '#1F3491',
-                            900: '#13215C',
-                            950: '#0A1033'
-                        },
-                        indigo: {
-                            50: '#F5F3FC',
-                            100: '#EAE5FA',
-                            200: '#D2C8F6',
-                            300: '#B5A5F0',
-                            400: '#9983EB',
-                            500: '#7B62E6',   // Warmer, softer periwinkle violet
-                            600: '#6046DB',
-                            700: '#4A32BF',
-                            800: '#342191',
-                            900: '#1F135C',
-                            955: '#100A33'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -62,50 +12,48 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif;
-            background-color: #191512; /* Fundo quente espresso */
-            color: #FAF9F6;            /* Fonte quente creme */
+            background-color: #0F172A; /* Fundo azul-escuro slate-900 original */
+            color: #f8fafc;            /* Fonte clara original */
             -webkit-font-smoothing: antialiased;
         }
         
-        /* Interceptação de classes arbitrárias do Tailwind de fundo azul frio (#0F172A e #1E293B) */
-        [class*="bg-[#0F172A]"], [class*="bg-[#0f172a]"] {
-            background-color: rgba(25, 21, 18, var(--tw-bg-opacity, 1)) !important;
-        }
-        [class*="bg-[#1E293B]"], [class*="bg-[#1e293b]"] {
-            background-color: rgba(40, 35, 30, var(--tw-bg-opacity, 1)) !important;
-        }
-        [class*="border-[#0F172A]"], [class*="border-[#1E293B]"] {
-            border-color: rgba(74, 63, 53, var(--tw-border-opacity, 1)) !important;
-        }
-        
-        /* Ajuste de foco nos campos para anel periwinkle quente */
-        .focus\:ring-blue-500:focus {
-            --tw-ring-color: #587AE6 !important;
-        }
-        .focus\:border-blue-500:focus {
-            border-color: #587AE6 !important;
+        /* Ajustar todos os blocos brancos/claros de menus para o modo escuro azulado coerente */
+        .bg-white, 
+        .bg-slate-50, 
+        .bg-slate-100,
+        [class*="bg-slate-50"], 
+        [class*="bg-slate-100"] {
+            background-color: #1E293B !important; /* Slate-800 card dark */
+            color: #f8fafc !important;             /* Texto claro */
         }
         
-        /* Correção para campos de escrita: texto sempre escuro em fundos claros */
+        /* Ajustar bordas claras para bordas escuras nos menus */
+        .border-slate-100, 
+        .border-slate-200, 
+        .border-slate-300,
+        [class*="border-slate-100"], 
+        [class*="border-slate-200"] {
+            border-color: #334155 !important;     /* Slate-700 dark border */
+        }
+
+        /* Ajustar textos escuros (que ficariam invisíveis nos cards escuros) para textos claros */
+        .text-slate-900, 
+        .text-slate-800, 
+        .text-slate-700, 
+        .text-slate-600 {
+            color: #cbd5e1 !important;             /* Slate-300 light gray text */
+        }
+
+        /* Forçar todos os campos de entrada, selects e textareas para o tema escuro azulado */
         input, select, textarea {
-            color: #28231E !important; /* Cor café escuro para contraste em campos claros */
+            background-color: #0F172A !important;  /* Slate-900 fundo escuro */
+            border-color: #334155 !important;      /* Slate-700 borda escura */
+            color: #ffffff !important;              /* Texto branco */
         }
-        
-        /* Caso o campo tenha fundo escuro ou tema escuro */
-        input.dark-field,
-        input.text-white, textarea.text-white, select.text-white,
-        input.text-slate-100, textarea.text-slate-100, select.text-slate-100,
-        input.text-slate-200, textarea.text-slate-200, select.text-slate-200,
-        input.text-slate-300, textarea.text-slate-300, select.text-slate-300,
-        input.bg-slate-800, select.bg-slate-800, textarea.bg-slate-800,
-        input.bg-slate-900, select.bg-slate-900, textarea.bg-slate-900,
-        input.bg-slate-950, select.bg-slate-950, textarea.bg-slate-950,
-        input.bg-slate-955, select.bg-slate-955, textarea.bg-slate-955,
-        .bg-slate-800 input, .bg-slate-800 select, .bg-slate-800 textarea,
-        .bg-slate-900 input, .bg-slate-900 select, .bg-slate-900 textarea,
-        .bg-slate-950 input, .bg-slate-950 select, .bg-slate-950 textarea,
-        .bg-slate-955 input, .bg-slate-955 select, .bg-slate-955 textarea {
-            color: #ffffff !important;
+
+        /* Placeholder dos inputs */
+        input::placeholder, textarea::placeholder {
+            color: #64748b !important;             /* Slate-500 */
         }
 
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
@@ -116,7 +64,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         
         .dashboard-card {
-            background-color: #28231E;
+            background-color: #1E293B; /* Slate-800 original */
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
