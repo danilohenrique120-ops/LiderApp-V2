@@ -6,6 +6,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>Líder App - Gestão Industrial 4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            50: '#FAF9F6',   // Soft warm cream-white
+                            100: '#F4EFEA',  // Warm oatmeal
+                            200: '#E7DDD3',  // Softer warm beige
+                            300: '#D2C3B4',  // Stone beige
+                            400: '#A3968A',  // Soft warm gray
+                            500: '#7F7367',  // Soft coffee gray
+                            600: '#665A50',  // Warm earth gray
+                            700: '#4A3F35',  // Warm border color (chocolate-gray)
+                            800: '#28231E',  // Elevated card background (warm cocoa)
+                            900: '#191512',  // Base page background (warm espresso)
+                            950: '#0F0C0A'   // Deep sunken inputs background
+                        },
+                        blue: {
+                            50: '#F0F3FC',
+                            100: '#DFE5FA',
+                            200: '#C3CEF6',
+                            300: '#9AB0F0',
+                            400: '#7895EB',
+                            500: '#587AE6',   // Warmer, softer periwinkle blue
+                            600: '#3D61DB',
+                            700: '#2A49BF',
+                            800: '#1F3491',
+                            900: '#13215C',
+                            950: '#0A1033'
+                        },
+                        indigo: {
+                            50: '#F5F3FC',
+                            100: '#EAE5FA',
+                            200: '#D2C8F6',
+                            300: '#B5A5F0',
+                            400: '#9983EB',
+                            500: '#7B62E6',   // Warmer, softer periwinkle violet
+                            600: '#6046DB',
+                            700: '#4A32BF',
+                            800: '#342191',
+                            900: '#1F135C',
+                            955: '#100A33'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -13,14 +62,33 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif;
-            background-color: #0F172A;
-            color: #f8fafc;
+            background-color: #191512; /* Fundo quente espresso */
+            color: #FAF9F6;            /* Fonte quente creme */
             -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Interceptação de classes arbitrárias do Tailwind de fundo azul frio (#0F172A e #1E293B) */
+        [class*="bg-[#0F172A]"], [class*="bg-[#0f172a]"] {
+            background-color: rgba(25, 21, 18, var(--tw-bg-opacity, 1)) !important;
+        }
+        [class*="bg-[#1E293B]"], [class*="bg-[#1e293b]"] {
+            background-color: rgba(40, 35, 30, var(--tw-bg-opacity, 1)) !important;
+        }
+        [class*="border-[#0F172A]"], [class*="border-[#1E293B]"] {
+            border-color: rgba(74, 63, 53, var(--tw-border-opacity, 1)) !important;
+        }
+        
+        /* Ajuste de foco nos campos para anel periwinkle quente */
+        .focus\:ring-blue-500:focus {
+            --tw-ring-color: #587AE6 !important;
+        }
+        .focus\:border-blue-500:focus {
+            border-color: #587AE6 !important;
         }
         
         /* Correção para campos de escrita: texto sempre escuro em fundos claros */
         input, select, textarea {
-            color: #1e293b !important; /* Cor Slate-800 para contraste em campos claros */
+            color: #28231E !important; /* Cor café escuro para contraste em campos claros */
         }
         
         /* Caso o campo tenha fundo escuro ou tema escuro */
@@ -48,7 +116,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         
         .dashboard-card {
-            background-color: #1E293B;
+            background-color: #28231E;
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
