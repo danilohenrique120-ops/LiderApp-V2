@@ -17,87 +17,43 @@
             -webkit-font-smoothing: antialiased;
         }
         
-        /* Ajustar todos os blocos principais para fundo branco limpo com texto escuro em todos os menus */
+        /* Ajustar todos os blocos brancos/claros de menus para o modo escuro azulado coerente */
         .bg-white, 
         .bg-slate-50, 
         .bg-slate-100,
-        .bg-slate-800,
-        .bg-slate-900,
         [class*="bg-slate-50"], 
-        [class*="bg-slate-100"],
-        [class*="bg-slate-800"],
-        [class*="bg-slate-900"] {
-            background-color: #FFFFFF !important; /* Branco limpo para os blocos */
-            color: #1E293B !important;             /* Texto escuro slate-800 */
+        [class*="bg-slate-100"] {
+            background-color: #1E293B !important; /* Slate-800 card dark */
+            color: #f8fafc !important;             /* Texto claro */
         }
         
-        /* Ajustar contêineres aninhados escuros para tons de cinza claro/rebaixado */
-        .bg-slate-800 .bg-slate-900,
-        .bg-slate-800 .bg-slate-950,
-        .bg-slate-800 .bg-slate-955,
-        .bg-slate-900 .bg-slate-950,
-        .bg-slate-900 .bg-slate-955,
-        .bg-white .bg-slate-900,
-        .bg-white .bg-slate-900\/50,
-        .bg-white .bg-slate-950,
-        .bg-white .bg-slate-955,
-        [class*="bg-slate-800"] [class*="bg-slate-900"],
-        [class*="bg-slate-800"] [class*="bg-slate-955"],
-        [class*="bg-slate-800"] [class*="bg-slate-950"],
-        [class*="bg-slate-900"] [class*="bg-slate-900"],
-        [class*="bg-slate-900"] [class*="bg-slate-955"],
-        [class*="bg-slate-900"] [class*="bg-slate-950"] {
-            background-color: #F3F4F6 !important; /* Gray-100 rebaixado */
-            color: #1E293B !important;
-        }
-
-        /* Ajustar bordas de blocos e cards para contraste elegante */
+        /* Ajustar bordas claras para bordas escuras nos menus */
         .border-slate-100, 
         .border-slate-200, 
         .border-slate-300,
-        .border-slate-800,
         [class*="border-slate-100"], 
-        [class*="border-slate-200"],
-        [class*="border-slate-800"] {
-            border-color: #E5E7EB !important;     /* Gray-200 borda suave */
+        [class*="border-slate-200"] {
+            border-color: #334155 !important;     /* Slate-700 dark border */
         }
 
-        /* Ajustar botões secundários nos blocos */
-        .bg-slate-50 .bg-slate-900,
-        .bg-white .bg-slate-900,
-        .bg-slate-800 .bg-slate-900,
-        .bg-slate-900 .bg-slate-900 {
-            color: #ffffff !important;
+        /* Ajustar textos escuros (que ficariam invisíveis nos cards escuros) para textos claros */
+        .text-slate-900, 
+        .text-slate-800, 
+        .text-slate-700, 
+        .text-slate-600 {
+            color: #cbd5e1 !important;             /* Slate-300 light gray text */
         }
 
-        /* Campos de texto padrão (fundo cinza-claro muito suave, texto escuro) */
+        /* Forçar todos os campos de entrada, selects e textareas para o tema escuro azulado */
         input, select, textarea {
-            background-color: #F9FAFB !important; /* Fundo cinza-claro gray-50 */
-            border-color: #D1D5DB !important;     /* Borda gray-300 */
-            color: #1E293B !important;             /* Texto slate-800 */
-        }
-
-        /* Campos de texto quando focados */
-        input:focus, select:focus, textarea:focus {
-            background-color: #FFFFFF !important; /* Fica branco puro no foco */
-            border-color: #3B82F6 !important;     /* Borda azul no foco */
-            outline: none !important;
-        }
-
-        /* Campos de texto que devem permanecer escuros (como com classe dark-field) */
-        input.dark-field,
-        input.text-white, textarea.text-white, select.text-white,
-        input.text-slate-100, textarea.text-slate-100, select.text-slate-100,
-        input.text-slate-200, textarea.text-slate-200, select.text-slate-200,
-        input.text-slate-300, textarea.text-slate-300, select.text-slate-300 {
-            background-color: #0F172A !important; /* Fundo dark original */
-            border-color: #334155 !important;     /* Borda dark original */
-            color: #FFFFFF !important;             /* Texto branco */
+            background-color: #0F172A !important;  /* Slate-900 fundo escuro */
+            border-color: #334155 !important;      /* Slate-700 borda escura */
+            color: #ffffff !important;              /* Texto branco */
         }
 
         /* Placeholder dos inputs */
         input::placeholder, textarea::placeholder {
-            color: #9CA3AF !important;             /* Gray-400 */
+            color: #64748b !important;             /* Slate-500 */
         }
 
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
