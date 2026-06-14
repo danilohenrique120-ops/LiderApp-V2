@@ -17,43 +17,62 @@
             -webkit-font-smoothing: antialiased;
         }
         
-        /* Ajustar todos os blocos brancos/claros de menus para o modo escuro azulado coerente */
+        /* Ajustar todos os blocos brancos/claros para um off-white azulado suave e coerente (menos agressivo que branco puro) */
         .bg-white, 
         .bg-slate-50, 
         .bg-slate-100,
         [class*="bg-slate-50"], 
         [class*="bg-slate-100"] {
-            background-color: #1E293B !important; /* Slate-800 card dark */
-            color: #f8fafc !important;             /* Texto claro */
+            background-color: #F1F5F9 !important; /* Slate-100 (off-white azulado suave) */
+            color: #1E293B !important;             /* Texto escuro slate-800 para legibilidade */
         }
         
-        /* Ajustar bordas claras para bordas escuras nos menus */
+        /* Ajustar bordas claras para bordas de contraste suave */
         .border-slate-100, 
         .border-slate-200, 
         .border-slate-300,
         [class*="border-slate-100"], 
         [class*="border-slate-200"] {
-            border-color: #334155 !important;     /* Slate-700 dark border */
+            border-color: #CBD5E1 !important;     /* Slate-300 (borda suave) */
         }
 
-        /* Ajustar textos escuros (que ficariam invisíveis nos cards escuros) para textos claros */
-        .text-slate-900, 
-        .text-slate-800, 
-        .text-slate-700, 
-        .text-slate-600 {
-            color: #cbd5e1 !important;             /* Slate-300 light gray text */
+        /* Ajustar botões secundários nos blocos claros */
+        .bg-slate-50 .bg-slate-900,
+        .bg-white .bg-slate-900 {
+            color: #ffffff !important;
         }
 
-        /* Forçar todos os campos de entrada, selects e textareas para o tema escuro azulado */
+        /* Campos de texto padrão (fundo claro, texto escuro) */
         input, select, textarea {
-            background-color: #0F172A !important;  /* Slate-900 fundo escuro */
-            border-color: #334155 !important;      /* Slate-700 borda escura */
-            color: #ffffff !important;              /* Texto branco */
+            background-color: #FFFFFF !important; /* Fundo branco puro */
+            border-color: #CBD5E1 !important;     /* Borda slate-300 */
+            color: #1E293B !important;             /* Texto slate-800 */
+        }
+
+        /* Campos de texto em tema escuro */
+        input.dark-field,
+        input.text-white, textarea.text-white, select.text-white,
+        input.text-slate-100, textarea.text-slate-100, select.text-slate-100,
+        input.text-slate-200, textarea.text-slate-200, select.text-slate-200,
+        input.text-slate-300, textarea.text-slate-300, select.text-slate-300,
+        input.bg-slate-850, select.bg-slate-850, textarea.bg-slate-850,
+        input.bg-slate-800, select.bg-slate-800, textarea.bg-slate-800,
+        input.bg-slate-900, select.bg-slate-900, textarea.bg-slate-900,
+        input.bg-slate-950, select.bg-slate-950, textarea.bg-slate-955,
+        input.bg-slate-955, select.bg-slate-955, textarea.bg-slate-955,
+        [class*="bg-[#0F172A]"] input, [class*="bg-[#0F172A]"] select, [class*="bg-[#0F172A]"] textarea,
+        [class*="bg-[#1E293B]"] input, [class*="bg-[#1E293B]"] select, [class*="bg-[#1E293B]"] textarea,
+        .bg-slate-800 input, .bg-slate-800 select, .bg-slate-800 textarea,
+        .bg-slate-900 input, .bg-slate-900 select, .bg-slate-900 textarea,
+        .bg-slate-950 input, .bg-slate-950 select, .bg-slate-955 textarea {
+            background-color: #0F172A !important; /* Fundo dark original */
+            border-color: #334155 !important;     /* Borda dark original */
+            color: #FFFFFF !important;             /* Texto branco */
         }
 
         /* Placeholder dos inputs */
         input::placeholder, textarea::placeholder {
-            color: #64748b !important;             /* Slate-500 */
+            color: #94A3B8 !important;             /* Slate-400 */
         }
 
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
