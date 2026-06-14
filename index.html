@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -12,48 +13,31 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif;
-            background-color: #0F172A; /* Fundo azul-escuro slate-900 original */
-            color: #f8fafc;            /* Fonte clara original */
+            background-color: #0F172A;
+            color: #f8fafc;
             -webkit-font-smoothing: antialiased;
         }
         
-        /* Ajustar todos os blocos brancos/claros de menus para o modo escuro azulado coerente */
-        .bg-white, 
-        .bg-slate-50, 
-        .bg-slate-100,
-        [class*="bg-slate-50"], 
-        [class*="bg-slate-100"] {
-            background-color: #1E293B !important; /* Slate-800 card dark */
-            color: #f8fafc !important;             /* Texto claro */
+        /* Correção para campos de escrita: texto sempre escuro em fundos claros */
+        input, select, textarea {
+            color: #1e293b; /* Removido !important para permitir customizações locais */
         }
         
-        /* Ajustar bordas claras para bordas escuras nos menus */
-        .border-slate-100, 
-        .border-slate-200, 
-        .border-slate-300,
-        [class*="border-slate-100"], 
-        [class*="border-slate-200"] {
-            border-color: #334155 !important;     /* Slate-700 dark border */
-        }
-
-        /* Ajustar textos escuros (que ficariam invisíveis nos cards escuros) para textos claros */
-        .text-slate-900, 
-        .text-slate-800, 
-        .text-slate-700, 
-        .text-slate-600 {
-            color: #cbd5e1 !important;             /* Slate-300 light gray text */
-        }
-
-        /* Forçar todos os campos de entrada, selects e textareas para o tema escuro azulado */
-        input, select, textarea {
-            background-color: #0F172A !important;  /* Slate-900 fundo escuro */
-            border-color: #334155 !important;      /* Slate-700 borda escura */
-            color: #ffffff !important;              /* Texto branco */
-        }
-
-        /* Placeholder dos inputs */
-        input::placeholder, textarea::placeholder {
-            color: #64748b !important;             /* Slate-500 */
+        /* Caso o campo tenha fundo escuro ou tema escuro */
+        input.dark-field,
+        input.text-white, textarea.text-white, select.text-white,
+        input.text-slate-100, textarea.text-slate-100, select.text-slate-100,
+        input.text-slate-200, textarea.text-slate-200, select.text-slate-200,
+        input.text-slate-300, textarea.text-slate-300, select.text-slate-300,
+        input.bg-slate-800, select.bg-slate-800, textarea.bg-slate-800,
+        input.bg-slate-900, select.bg-slate-900, textarea.bg-slate-900,
+        input.bg-slate-950, select.bg-slate-950, textarea.bg-slate-950,
+        input.bg-slate-955, select.bg-slate-955, textarea.bg-slate-955,
+        .bg-slate-800 input, .bg-slate-800 select, .bg-slate-800 textarea,
+        .bg-slate-900 input, .bg-slate-900 select, .bg-slate-900 textarea,
+        .bg-slate-950 input, .bg-slate-950 select, .bg-slate-950 textarea,
+        .bg-slate-955 input, .bg-slate-955 select, .bg-slate-955 textarea {
+            color: #ffffff !important;
         }
 
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
@@ -64,7 +48,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         
         .dashboard-card {
-            background-color: #1E293B; /* Slate-800 original */
+            background-color: #1E293B;
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
