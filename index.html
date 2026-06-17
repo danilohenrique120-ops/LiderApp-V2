@@ -20,7 +20,7 @@
         
         /* Correção para campos de escrita: texto sempre escuro em fundos claros */
         input, select, textarea {
-            color: #1e293b; /* Removido !important para permitir customizações locais */
+            color: #1e293b !important; /* Força texto escuro em campos claros, superando reset do Tailwind */
         }
         
         /* Caso o campo tenha fundo escuro ou tema escuro */
