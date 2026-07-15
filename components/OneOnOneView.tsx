@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
     MessageSquare, Trash2, Calendar, Download, Sparkles, Loader2, Info, Pencil, 
     ChevronDown, ChevronUp, Search, CheckCircle2, Circle, Target, Smile, Meh, Frown, 
@@ -69,62 +69,82 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
     const [isRecording, setIsRecording] = useState(false);
     const [liveTranscript, setLiveTranscript] = useState('');
     const [isStructuring, setIsStructuring] = useState(false);
-    const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
+    
+    // Referências síncronas para controle da gravação por microfone
+    const isRecordingRef = useRef<boolean>(false);
+    const recognitionRef = useRef<any>(null);
 
     const aiService = AiService.getInstance();
 
-    // Initialize speech recognition
-    useEffect(() => {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            const rec = new SpeechRecognition();
-            rec.continuous = true;
-            rec.interimResults = true;
-            rec.lang = 'pt-BR';
-            setRecognitionInstance(rec);
-        }
-    }, []);
-
     const startSpeechRecording = () => {
-        if (!recognitionInstance) {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) {
             alert("O reconhecimento de fala não é suportado pelo seu navegador atual. Use o Google Chrome, Edge ou Safari.");
             return;
         }
+
         setLiveTranscript('');
         setIsRecording(true);
-        
-        recognitionInstance.onresult = (event: any) => {
-            let finalTranscript = '';
+        isRecordingRef.current = true;
+
+        const rec = new SpeechRecognition();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.lang = 'pt-BR';
+        recognitionRef.current = rec;
+
+        let accumulatedFinal = '';
+
+        rec.onresult = (event: any) => {
+            let interimTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
+                const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + ' ';
+                    accumulatedFinal += transcript + ' ';
+                } else {
+                    interimTranscript += transcript;
                 }
             }
-            if (finalTranscript) {
-                setLiveTranscript(prev => prev + finalTranscript);
-            }
+            setLiveTranscript(accumulatedFinal + interimTranscript);
         };
 
-        recognitionInstance.onerror = (event: any) => {
+        rec.onerror = (event: any) => {
             console.error("Erro no reconhecimento de fala:", event.error);
+            if (event.error === 'no-speech') {
+                return;
+            }
             if (event.error === 'not-allowed') {
                 alert("Permissão de microfone negada. Conceda acesso ao microfone nas configurações do seu navegador para usar o recurso.");
+                isRecordingRef.current = false;
+                setIsRecording(false);
             }
-            setIsRecording(false);
         };
 
-        recognitionInstance.onend = () => {
-            setIsRecording(false);
+        rec.onend = () => {
+            if (isRecordingRef.current) {
+                try {
+                    rec.start();
+                } catch (e) {
+                    console.error("Erro ao reiniciar reconhecimento de fala:", e);
+                }
+            } else {
+                setIsRecording(false);
+            }
         };
 
-        recognitionInstance.start();
+        rec.start();
     };
 
     const stopSpeechRecording = () => {
-        if (recognitionInstance) {
-            recognitionInstance.stop();
-            setIsRecording(false);
+        isRecordingRef.current = false;
+        if (recognitionRef.current) {
+            try {
+                recognitionRef.current.stop();
+            } catch (e) {
+                console.error("Erro ao parar gravação:", e);
+            }
         }
+        setIsRecording(false);
     };
 
     const handleProcessTranscription = async () => {
@@ -463,7 +483,7 @@ const OneOnOneView: React.FC<OneOnOneViewProps> = ({ meetings, employees, user, 
             employeeActions: formData.employeeActions || '',
             managerActions: formData.managerActions || '',
             actionItems: formData.actionItems || [],
-            sentiment: formData.sentiment,
+            sentiment: formData.sentiment || null,
             uid: user.uid
         };
 
